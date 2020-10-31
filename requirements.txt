@@ -1,0 +1,3 @@
+cherrypy
+shapely
+psycopg2
