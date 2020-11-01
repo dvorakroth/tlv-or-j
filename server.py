@@ -11,9 +11,19 @@ import shapely.geometry
 import psycopg2
 from psycopg2.extras import execute_batch
 
-def random_point_in_polygon(polygon):
+def random_point_in_polygon(polygon, force_minx=None, force_maxx=None, force_miny=None, force_maxy=None):
     result = None
     minx, miny, maxx, maxy = polygon.bounds
+
+    if force_minx is not None and force_minx > minx:
+        minx = force_minx
+    if force_maxx is not None and force_maxx < maxx:
+        maxx = force_maxx
+    if force_miny is not None and force_miny > miny:
+        miny = force_miny
+    if force_maxy is not None and force_maxy < maxy:
+        maxy = force_maxy
+
     while result is None:
         pnt = shapely.geometry.Point(random.uniform(minx, maxx), random.uniform(miny, maxy))
         if polygon.contains(pnt):
@@ -27,6 +37,8 @@ def randomString(stringLength):
 valid_answers = [0, 1]
 
 city_poly = None
+preferred_maxx = 34.7807
+preferred_maxy = 32.0646
 
 class IDb:
     def store_new_answers(self, points, answers):
@@ -242,7 +254,25 @@ class TlvOrJServer:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def generate_session(self):
-        points = [random_point_in_polygon(city_poly) for i in range(5)]
+        points = [
+            random_point_in_polygon(
+                city_poly,
+                force_miny=preferred_maxy + random.uniform(-0.04, 0)
+            )
+            for i in range(2)
+        ] + [
+            random_point_in_polygon(
+                city_poly,
+                force_maxx=preferred_maxx + random.uniform(0, 0.03),
+                force_maxy=preferred_maxy + random.uniform(0, 0.03)
+            )
+            for i in range(3)
+        ]
+
+        # sort either north to south or south to north
+        # sort_direction = random.choice([False, True])
+        # points.sort(key=lambda p: p[1], reverse=sort_direction)
+        random.shuffle(points)
 
         return self.db.new_session(points)
 
