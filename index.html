@@ -485,9 +485,8 @@
                 // color: '#f5793a'
             // }).setLngLat(q).addTo(MAP);
             STATE.markers[STATE.question_idx] = L.marker(q, {icon:MARKER_Q}).addTo(MAP);
+            setTimeout(function() {STATE.is_animating = false;}, 1500);
             MAP.flyTo(q, QUESTION_VIEW_ZOOM, {duration: 1.5});
-
-            STATE.is_animating = false;
         }
 
         function addAnswer(isJaffa) {
@@ -717,7 +716,7 @@
 
                 // DONE: remove question markers?
                 STATE.markers.map((m) => m.remove()); // remove quesion markers
-                
+
                 // DONE: replace this with like actual answers or something
                 STATE.answer_markers = [];
                 for (let i = 0; i < o.features.length; i++) {
