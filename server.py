@@ -148,7 +148,7 @@ class DbPostgres(IDb):
         with psycopg2.connect(DATABASE_URL, sslmode='require') as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
-                    "DELETE WebSession WHERE ttl < %s;",
+                    "DELETE FROM WebSession WHERE ttl < %s;",
                     (time.time(),)
                 )
 
