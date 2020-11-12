@@ -423,19 +423,6 @@
         });
 
         function loadQuestionsFromServer() {
-            // DONE: actually load from an actual server lol
-            // const MOCK_SERVER_DATA = {
-            //     session_id: "66600000c0ffee00",
-            //     questions: [
-            //         [32.046846, 34.765445],
-            //         [32.089870, 34.779854],
-            //         [32.043159, 34.802404]
-            //     ]
-            // };
-
-            return 0; // EVIL BRANCH!
-            
-
             fetch('/generate_session').then(function(response) {
                 return response.json();
             }).then(function(o) {
