@@ -435,6 +435,9 @@
             //     ]
             // };
 
+            return 0; // EVIL BRANCH!
+            
+
             fetch('/generate_session').then(function(response) {
                 return response.json();
             }).then(function(o) {
