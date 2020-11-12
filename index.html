@@ -364,8 +364,8 @@
         const MAP_MAX_BOUNDS = L.latLngBounds(L.latLng(32.017357, 34.724041), L.latLng(32.159226, 34.867250));
 
         const MAP_STYLES = [
-            'https://api.maptiler.com/maps/47c517fb-70bf-4903-89b4-2033ebbbedb1/{z}/{x}/{y}.png?key=XQ643Hu2aW2ClNCu8gL4', // light
-            'https://api.maptiler.com/maps/a3b10cf0-43d5-4a06-aefd-226a3a02a57c/{z}/{x}/{y}.png?key=XQ643Hu2aW2ClNCu8gL4', // dark
+            'https://api.maptiler.com/maps/47c517fb-70bf-4903-89b4-2033ebbbedb1/{z}/{x}/{y}{r}.png?key=XQ643Hu2aW2ClNCu8gL4', // light
+            'https://api.maptiler.com/maps/a3b10cf0-43d5-4a06-aefd-226a3a02a57c/{z}/{x}/{y}{r}.png?key=XQ643Hu2aW2ClNCu8gL4', // dark
         ];
 
         // initialize map and stuff
@@ -774,7 +774,9 @@
             return url_template
                 .replace("{z}", ""+Math.floor(z))
                 .replace("{x}", ""+Math.floor(x))
-                .replace("{y}", ""+Math.floor(y));
+                .replace("{y}", ""+Math.floor(y))
+                // did you know? i really hope this is legally distinct from how the incomaptibly-licensed Leaflet source code does this check!
+                .replace("{r}", L.Browser.retina && "@2x");
         }
 
         function preload_image_impl(src, onload) {
