@@ -6,6 +6,13 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
   <style>
+    @font-face {
+        font-family: 'Heebo';
+        src: url(/assets/Heebo-Regular.ttf) format('truetype');
+    }
+    body, .btn-pretty {
+        font-family: 'Heebo', sans-serif;
+    }
     #map {position: absolute; top: 0; right: 0; bottom: 0; left: 0;}
     .hidden {display: none !important;}
     /* .preloaded {
@@ -149,6 +156,24 @@
             display:none;
         }
     }
+
+    /* .pulsating {
+        animation-duration: 1s;
+        animation-name: pulse;
+        animation-iteration-count: infinite;
+        animation-timing-function: ease-in-out;
+        animation-direction: alternate;
+    }
+
+    @keyframes pulse {
+        from {
+            transform: scale(100%);
+        }
+
+        to {
+            transform: scale(200%);
+        }
+    } */
 
     #loading-page, #results-loading-page {
         display: flex;
@@ -472,7 +497,10 @@
             // STATE.markers[STATE.question_idx] = new mapboxgl.Marker({
                 // color: '#f5793a'
             // }).setLngLat(q).addTo(MAP);
-            STATE.markers[STATE.question_idx] = L.marker(q, {icon:MARKER_Q}).addTo(MAP);
+            const marker = STATE.markers[STATE.question_idx]
+                         = L.marker(q, {icon:MARKER_Q}).addTo(MAP);
+            marker.getElement().classList.add("pulsating");
+
             setTimeout(function() {STATE.is_animating = false;}, 1500);
             MAP.flyTo(q, QUESTION_VIEW_ZOOM, {duration: 1.5});
         }
@@ -489,6 +517,7 @@
             }
 
             const marker = STATE.markers[STATE.question_idx];
+            marker.getElement().classList.remove("pulsating");
             marker.setIcon(isJaffa ? MARKER_JAFFA : MARKER_TLV);
 
             const reward = L.marker(STATE.questions[STATE.question_idx], {icon:CAT_HEART}).addTo(MAP);
