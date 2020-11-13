@@ -74,6 +74,10 @@
         background-color: #800;
     }
 
+    #btn-playagain {
+        background-color: #0054ae;
+    }
+
     #btn-tlv:hover, #btn-tlv:focus {
         background: #6fe0fc;
     }
@@ -84,6 +88,10 @@
 
     #btn-start:hover, #btn-start:focus {
         background-color: #d22;
+    }
+
+    #btn-playagain:hover, #btn-playagain:focus {
+        background-color: #70ade3;
     }
 
     .btn-pretty:active {
@@ -278,6 +286,7 @@
     <section id="all-answers-page" class="hidden">
         <h1>התשובות הסופיות</h1>
         <p>הנה התשובות של כולן.ם! נכון שעכשיו המצב הרבה יותר ברור?</p>
+        <button class="btn-pretty" id="btn-playagain">עוד הפעם!!</button>
     </section>
     
 </div>
@@ -342,7 +351,6 @@
             markers: null,
             answers: null,
             answer_markers: null,
-            show_results: false,
 
             is_animating: true,
 
@@ -416,6 +424,43 @@
             popupAnchor: [0, 0] // ?
         });
 
+        function playAgain() {
+            // reset the state and stuff
+            STATE.session_id = null;
+            STATE.questions = null;
+            STATE.question_idx = -1;
+            STATE.answers = null;
+            STATE.markers = null;
+            clear_map_images_cache();
+            clear_answer_markers();
+
+            clear_renew_session_interval();
+
+            document.getElementById('all-answers-page').classList.add('hidden');
+            document.getElementById('loading-page').classList.remove('hidden');
+
+            loadQuestionsFromServer();
+        }
+
+        function clear_renew_session_interval() {
+            if (STATE.renew_session_interval !== null) {
+                clearInterval(STATE.renew_session_interval);
+                STATE.renew_session_interval = null;
+            }
+        }
+
+        function clear_answer_markers() {
+            if (!STATE.answer_markers) {
+                return;
+            }
+
+            for (let i = 0; i < STATE.answer_markers.length; i++) {
+                STATE.answer_markers[i].remove();
+            }
+
+            STATE.answer_markers = null;
+        }
+
         function loadQuestionsFromServer() {
             fetch('/generate_session').then(function(response) {
                 return response.json();
@@ -448,10 +493,7 @@
                     // preload_tile_neighborhood(q[0], q[1], QUESTION_VIEW_ZOOM - 2, GLOB_is_dark_mode|0);
                 }
 
-                if (STATE.renew_session_interval !== null) {
-                    clearInterval(STATE.renew_session_interval);
-                    STATE.renew_session_interval = null;
-                }
+                clear_renew_session_interval();
 
                 STATE.renew_session_interval = setInterval(
                     function() {
@@ -459,10 +501,7 @@
                         if (STATE.session_id && STATE.question_idx < (STATE.questions || []).length) {
                             fetch('/renew_session?session_id=' + STATE.session_id);
                         } else {
-                            if (STATE.renew_session_interval !== null) {
-                                clearInterval(STATE.renew_session_interval);
-                                STATE.renew_session_interval = null;
-                            }
+                            clear_renew_session_interval();
                         }
                     },
                     5 * 60 * 1000
@@ -536,10 +575,7 @@
                 document.getElementById('results-loading-page').classList.add('hidden');
                 document.getElementById('all-answers-page').classList.remove('hidden');
 
-                if (STATE.renew_session_interval !== null) {
-                    clearInterval(STATE.renew_session_interval);
-                    STATE.renew_session_interval = null;
-                }
+                clear_renew_session_interval();
 
                 STATE.markers.map((m) => m.remove()); // remove quesion markers
                 STATE.answer_markers = [];
@@ -590,6 +626,9 @@
             document.getElementById('intro-page').classList.add('hidden');
             document.getElementById('question-page').classList.remove('hidden');
             showNextPoint();
+        });
+        document.getElementById('btn-playagain').addEventListener('click', event => {
+            playAgain();
         });
         setTimeout(() => loadQuestionsFromServer(), 0);
 
