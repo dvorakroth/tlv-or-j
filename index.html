@@ -15,6 +15,7 @@
     }
     #map {position: absolute; top: 0; right: 0; bottom: 0; left: 0;}
     .hidden {display: none !important;}
+    .no-bg-no-border {background: none !important; border: none !important; /* don't ask */}
     /* .preloaded {
         display: block;
         position: absolute;
@@ -157,8 +158,8 @@
         }
     }
 
-    /* .pulsating {
-        animation-duration: 1s;
+    .pulsating {
+        animation-duration: 1.5s;
         animation-name: pulse;
         animation-iteration-count: infinite;
         animation-timing-function: ease-in-out;
@@ -167,13 +168,13 @@
 
     @keyframes pulse {
         from {
-            transform: scale(100%);
+            transform: scale(150%);
         }
 
         to {
-            transform: scale(200%);
+            transform: scale(250%);
         }
-    } */
+    }
 
     #loading-page, #results-loading-page {
         display: flex;
@@ -415,8 +416,9 @@
 
         const QUESTION_VIEW_ZOOM = 16;
 
-        const MARKER_Q = L.icon({
-            iconUrl: '/assets/marker_q.svg',
+        const MARKER_Q = L.divIcon({
+            html: '<img src="/assets/marker_q.svg" class="pulsating">',
+            className: 'no-bg-no-border',
 
             iconSize: [24, 30],
             iconAnchor: [12, 15],
@@ -497,10 +499,7 @@
             // STATE.markers[STATE.question_idx] = new mapboxgl.Marker({
                 // color: '#f5793a'
             // }).setLngLat(q).addTo(MAP);
-            const marker = STATE.markers[STATE.question_idx]
-                         = L.marker(q, {icon:MARKER_Q}).addTo(MAP);
-            marker.getElement().classList.add("pulsating");
-
+            STATE.markers[STATE.question_idx] = L.marker(q, {icon:MARKER_Q}).addTo(MAP);
             setTimeout(function() {STATE.is_animating = false;}, 1500);
             MAP.flyTo(q, QUESTION_VIEW_ZOOM, {duration: 1.5});
         }
@@ -517,7 +516,6 @@
             }
 
             const marker = STATE.markers[STATE.question_idx];
-            marker.getElement().classList.remove("pulsating");
             marker.setIcon(isJaffa ? MARKER_JAFFA : MARKER_TLV);
 
             const reward = L.marker(STATE.questions[STATE.question_idx], {icon:CAT_HEART}).addTo(MAP);
