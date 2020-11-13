@@ -22,6 +22,7 @@
     <meta name="theme-color" content="#ffffff">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+  <script src="/assets/leaflet-heat.js"></script>
   <style>
     @font-face {
         font-family: 'Heebo';
@@ -398,12 +399,24 @@
             maxZoom: 20,
             maxBounds: MAP_MAX_BOUNDS
         }).setView([32.058225, 34.770073], 14);
+
         const LAYER = L.tileLayer(
             MAP_STYLES[GLOB_is_dark_mode | 0],{
                 tileSize: TILE_SIZE,
                 zoomOffset: ZOOM_OFFSET,
                 attribution: "\u003ca href=\"https://www.maptiler.com/copyright/\" target=\"_blank\"\u003e\u0026copy; MapTiler\u003c/a\u003e \u003ca href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\"\u003e\u0026copy; OpenStreetMap contributors\u003c/a\u003e",
                 crossOrigin: true
+        }).addTo(MAP);
+
+        const HEAT_LAYER_TLV = L.heatLayer([], {
+            minOpacity: 1,
+            gradient: {0.0: 'rgba(0.0, 0.0, 0.0, 0.0)', 1.0: 'rgba(99, 172, 190, 0.6)'}
+        }).addTo(MAP);
+        
+
+        const HEAT_LAYER_JAFFA = L.heatLayer([], {
+            minOpacity: 1,
+            gradient: {0.0: 'rgba(0.0, 0.0, 0.0, 0.0)', 1.0: 'rgba(191, 83, 180, 0.6)'}
         }).addTo(MAP);
 
         const QUESTION_VIEW_ZOOM = 16;
@@ -467,15 +480,17 @@
         }
 
         function clear_answer_markers() {
-            if (!STATE.answer_markers) {
-                return;
-            }
+            // if (!STATE.answer_markers) {
+            //     return;
+            // }
 
-            for (let i = 0; i < STATE.answer_markers.length; i++) {
-                STATE.answer_markers[i].remove();
-            }
+            // for (let i = 0; i < STATE.answer_markers.length; i++) {
+            //     STATE.answer_markers[i].remove();
+            // }
 
             STATE.answer_markers = null;
+            HEAT_LAYER_TLV.setLatLngs([]);
+            HEAT_LAYER_JAFFA.setLatLngs([]);
         }
 
         function loadQuestionsFromServer() {
@@ -594,21 +609,26 @@
 
                 clear_renew_session_interval();
 
-                STATE.markers.map((m) => m.remove()); // remove quesion markers
-                STATE.answer_markers = [];
+                // STATE.markers.map((m) => m.remove()); // remove quesion markers
+                STATE.answer_markers = [[], []];
                 for (let i = 0; i < o.features.length; i++) {
                     const f = o.features[i];
 
                     const [x, y] = f.geometry.coordinates;
                     const is_jaffa = f.properties.answer;
 
-                    STATE.answer_markers.push(
-                        L.marker(
-                            [y, x],
-                            {icon: is_jaffa ? MARKER_JAFFA : MARKER_TLV}
-                        ).addTo(MAP)
+                    STATE.answer_markers[is_jaffa|0].push(
+                        [y, x, 1]
+                        // L.marker(
+                        //     [y, x],
+                        //     {icon: is_jaffa ? MARKER_JAFFA : MARKER_TLV}
+                        // ).addTo(MAP)
                     );
                 }
+
+                HEAT_LAYER_TLV.setLatLngs(STATE.answer_markers[0]);
+                HEAT_LAYER_JAFFA.setLatLngs(STATE.answer_markers[1]);
+                
 
                 // const tlv_point = 32.063602;
                 // const jaf_point = 32.040754;
