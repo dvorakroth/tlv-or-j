@@ -56,6 +56,9 @@ class IDb:
     def clean_stale_sessions(self):
         pass
 
+    def renew_session(self, session_id):
+        pass
+
 DATABASE_URL = os.environ['DATABASE_URL']
 
 class DbPostgres(IDb):
@@ -151,65 +154,37 @@ class DbPostgres(IDb):
                     "DELETE FROM WebSession WHERE ttl < %s;",
                     (time.time(),)
                 )
-
-# class DbInMemory(IDb):
-#     def __init__(self):
-#         self.db = []
-#         self.sessionsdb = {}
-#         self.sessionslock = threading.Lock()
-
-#     def store_new_answers(self, points, answers):
-#         for point, answer in zip(points, answers):
-#             self.db.append({
-#                 'type': 'Feature',
-#                 'geometry': {
-#                     'type': 'Point',
-#                     'coordinates': point,
-#                 },
-#                 'properties': {
-#                     'answer': answer
-#                 }
-#             })
-
-#     def get_all_answers(self):
-#         return {
-#             'type': 'FeatureCollection',
-#             'features': self.db
-#         }
     
-#     def new_session(self, points):
-#         with self.sessionslock:
-#             session_id = None
-#             while session_id is None or session_id in self.sessionsdb:        
-#                 session_id = randomString(64)
-    
-#             self.sessionsdb[session_id] = {
-#                 'session_id': session_id,
-#                 'points': points,
-#                 'ttl': time.time() + 15*60
-#             }
+    def renew_session(self, session_id):
+        # q: is this a glaring security hole or a useful ui usability feature?
+        # a: why not both?
 
-#             return self.sessionsdb[session_id]
-    
-#     def get_and_delete_session(self, session_id):
-#         session = None
+        with psycopg2.connect(DATABASE_URL, sslmode='require') as conn:
+            row = None
 
-#         with self.sessionslock:
-#             session = self.sessionsdb.get(session_id, None)
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "SELECT session_id, ttl, points_json FROM WebSession WHERE session_id = %s;",
+                    (session_id,)
+                )
 
-#             if session is not None:
-#                 del self.sessionsdb[session_id]
+                row = cursor.fetchone()
 
-#         if session is None or session['ttl'] < time.time():
-#             raise KeyError('session not found')
-        
-#         return session['points']
-    
-#     def clean_stale_sessions(self):
-#         with self.sessionslock:
-#             for k in list(self.sessionsdb.keys()):
-#                 if self.sessionsdb[k]['ttl'] < time.time():
-#                     del self.sessionsdb[k]
+            if row is None:
+                raise KeyError("session not found")
+
+            new_ttl = time.time() + 15*60
+            
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    "UPDATE WebSession SET ttl=%s WHERE session_id=%s;",
+                    (new_ttl,session_id)
+                )
+            
+            return new_ttl
+            
+        if row[1] < time.time():
+            raise ValueError("session expired")
 
 class TlvOrJServer:
     def __init__(self):
@@ -275,6 +250,11 @@ class TlvOrJServer:
         random.shuffle(points)
 
         return self.db.new_session(points)
+    
+    @cherrypy.expose
+    @cherrypy.tools.json_out()
+    def renew_session(self, session_id):
+        return self.db.renew_session(session_id)
 
 config = {
     'global': {

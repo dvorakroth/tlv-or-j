@@ -364,7 +364,7 @@
             onDarkModeSettingChanged();
         });
 
-        const STATE = {
+        const STATE = window.STATE = {
             session_id: null,
             question_idx: -1,
             questions: null,
@@ -375,7 +375,8 @@
 
             is_animating: true,
 
-            is_loading_results: false
+            is_loading_results: false,
+            renew_session_interval: null
         };
 
         const PRELOADED_IMAGE_XYZ  = window.PRELOADED_IMAGE_XYZ  = [];
@@ -480,6 +481,26 @@
                     );
                     // preload_tile_neighborhood(q[0], q[1], QUESTION_VIEW_ZOOM - 2, GLOB_is_dark_mode|0);
                 }
+
+                if (STATE.renew_session_interval !== null) {
+                    clearInterval(STATE.renew_session_interval);
+                    STATE.renew_session_interval = null;
+                }
+
+                STATE.renew_session_interval = setInterval(
+                    function() {
+                        console.log("renewing session");
+                        if (STATE.session_id && STATE.question_idx < (STATE.questions || []).length) {
+                            fetch('/renew_session?session_id=' + STATE.session_id);
+                        } else {
+                            if (STATE.renew_session_interval !== null) {
+                                clearInterval(STATE.renew_session_interval);
+                                STATE.renew_session_interval = null;
+                            }
+                        }
+                    },
+                    5 * 60 * 1000
+                );
 
                 document.getElementById('loading-page').classList.add('hidden');
                 document.getElementById('intro-page').classList.remove('hidden');
@@ -729,6 +750,11 @@
                 document.getElementById('results-loading-page').classList.add('hidden');
                 document.getElementById('all-answers-page').classList.remove('hidden');
 
+                if (STATE.renew_session_interval !== null) {
+                    clearInterval(STATE.renew_session_interval);
+                    STATE.renew_session_interval = null;
+                }
+
                 // DONE: remove question markers?
                 STATE.markers.map((m) => m.remove()); // remove quesion markers
 
@@ -791,7 +817,7 @@
                 .replace("{x}", ""+Math.floor(x))
                 .replace("{y}", ""+Math.floor(y))
                 // did you know? i really hope this is legally distinct from how the incomaptibly-licensed Leaflet source code does this check!
-                .replace("{r}", L.Browser.retina && "@2x");
+                .replace("{r}", (L.Browser.retina && "@2x") || "");
         }
 
         function preload_image_impl(src, onload) {
