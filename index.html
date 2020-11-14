@@ -256,18 +256,28 @@
 
     @media screen and (max-width: 760px) {
         #main-ui {
-            top: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            top: unset;
+            bottom: 0;
             left: 0;
             right: 0;
 
             border-left: none;
             border-right: none;
-            border-top: none;
+            border-bottom: none;
 
-            min-height: 120px;
+            box-sizing: border-box;
+
+            min-height: 240px;
         }
 
-        #map { top: 120px; }
+        #map { 
+            bottom: 240px;
+            top: 0;
+        }
     }
   </style>
   <title>תל אביב או יפו?</title>
@@ -460,7 +470,6 @@
             STATE.questions = null;
             STATE.question_idx = -1;
             STATE.answers = null;
-            STATE.markers = null;
             clear_map_images_cache();
             clear_answer_markers();
 
@@ -468,6 +477,7 @@
 
             document.getElementById('all-answers-page').classList.add('hidden');
             document.getElementById('loading-page').classList.remove('hidden');
+            resize_map();
 
             loadQuestionsFromServer();
         }
@@ -487,6 +497,12 @@
             // for (let i = 0; i < STATE.answer_markers.length; i++) {
             //     STATE.answer_markers[i].remove();
             // }
+
+            for (let i = 0; i < STATE.markers.length; i++) {
+                STATE.markers[i].remove();
+            }
+
+            STATE.markers = null;
 
             STATE.answer_markers = null;
             HEAT_LAYER_TLV.setLatLngs([]);
@@ -541,6 +557,7 @@
 
                 document.getElementById('loading-page').classList.add('hidden');
                 document.getElementById('intro-page').classList.remove('hidden');
+                resize_map();
             });
         }
 
@@ -592,6 +609,7 @@
         function showResultsLoader() {
             document.getElementById('question-page').classList.add('hidden');
             document.getElementById('results-loading-page').classList.remove('hidden');
+            resize_map();
 
             clear_map_images_cache();
 
@@ -606,6 +624,7 @@
             }).then(function(o) {
                 document.getElementById('results-loading-page').classList.add('hidden');
                 document.getElementById('all-answers-page').classList.remove('hidden');
+                resize_map();
 
                 clear_renew_session_interval();
 
@@ -662,6 +681,7 @@
         document.getElementById('btn-start').addEventListener('click', event => {
             document.getElementById('intro-page').classList.add('hidden');
             document.getElementById('question-page').classList.remove('hidden');
+            resize_map();
             showNextPoint();
         });
         document.getElementById('btn-playagain').addEventListener('click', event => {
@@ -773,6 +793,24 @@
                     }
                 });
             });
+        }
+
+        window.addEventListener("resize", function() {
+            resize_map();
+        });
+
+        function resize_map() {
+            setTimeout(function() {
+                const ui = document.getElementById("main-ui");
+                const map = document.getElementById("map");
+
+                if ((ui.offsetTop + ui.offsetHeight) / window.innerHeight > 0.99) { // lol
+                    map.style.bottom = ui.offsetHeight + "px";
+                } else if (parseInt(map.style.bottom) !== 0) {
+                    map.style.bottom = "0px";
+                }
+                
+            }, 0);
         }
 
         
