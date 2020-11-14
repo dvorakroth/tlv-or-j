@@ -96,20 +96,24 @@
         background-color: #0054ae;
     }
 
-    #btn-tlv:hover, #btn-tlv:focus {
-        background: #6fe0fc;
-    }
+    
 
-    #btn-jaf:hover, #btn-jaf:focus {
-        background-color: #bf53b4;
-    }
+    @media (hover: hover) and (pointer: fine) {
+        #btn-tlv:hover, #btn-tlv:focus {
+            background: #6fe0fc;
+        }
 
-    #btn-start:hover, #btn-start:focus {
-        background-color: #d22;
-    }
+        #btn-jaf:hover, #btn-jaf:focus {
+            background-color: #bf53b4;
+        }
 
-    #btn-playagain:hover, #btn-playagain:focus {
-        background-color: #70ade3;
+        #btn-start:hover, #btn-start:focus {
+            background-color: #d22;
+        }
+
+        #btn-playagain:hover, #btn-playagain:focus {
+            background-color: #70ade3;
+        }
     }
 
     .btn-pretty:active {
@@ -602,7 +606,7 @@
             }, 1000);
 
             setTimeout(() => {
-                document.getElementById(isJaffa ? "btn-jaf" : "btn-tlv").blur();
+                //document.getElementById(isJaffa ? "btn-jaf" : "btn-tlv").blur(); // ha ha this doesn't work
                 showNextPoint();
             }, 600);
         }
