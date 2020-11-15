@@ -317,7 +317,7 @@
 
     <section id="results-loading-page" class="hidden">
         <div class="loading-indicator"></div>
-        <span><br>התשובות בעיבוד סופר מתקדם...</span>
+        <span><br>התשובות עוברות עיבוד סופר מתקדם...</span>
     </section>
 
     <section id="all-answers-page" class="hidden">
@@ -510,14 +510,13 @@
             for (let i = 0; i < STATE.markers.length; i++) {
                 STATE.markers[i].remove();
             }
-
             STATE.markers = null;
 
-            STATE.answer_markers = null;
             HEAT_LAYER.remove();
-            const blob = HEAT_LAYER.getUrl();
-            if (blob && blob.startsWith && blob.startsWith("blob")) {
-                URL.revokeObjectURL(blob);
+            HEAT_LAYER.setUrl("");
+            if (STATE.answer_markers) {
+                URL.revokeObjectURL(STATE.answer_markers);
+                STATE.answer_markers = null;
             }
         }
 
@@ -657,14 +656,14 @@
                 resize_map();
 
                 clear_renew_session_interval();
-
-                // STATE.markers.map((m) => m.remove()); // remove quesion markers
-                STATE.answer_markers = generate_heatmap(
+                
+                const heatmap = generate_heatmap(
                     o, 100, 0.7, 14
                 );
 
-                STATE.answer_markers.toBlob(function(blob) {
-                    HEAT_LAYER.setUrl(URL.createObjectURL(blob));
+                heatmap.toBlob(function(blob) {
+                    STATE.answer_markers = URL.createObjectURL(blob);
+                    HEAT_LAYER.setUrl(STATE.answer_markers);
                     HEAT_LAYER.addTo(MAP);
                 });
 
@@ -855,21 +854,6 @@
                 });
             });
         }
-
-        // window.test_generate_heatmap = function test_generate_heatmap() {
-        //     // window.HEATMAP_CANVAS = generate_heatmap(
-        //     //     [[34.7750, 32.0735, 0], [34.7616, 32.0599, 1]], 30, 4, 14
-        //     // );
-
-        //     // HEATMAP_CANVAS.toBlob(function(blob) {
-        //     //     window.HEATMAP_BLOB = blob;
-
-        //     //     window.HEATMAP_LAYER = L.imageOverlay(
-        //     //         URL.createObjectURL(blob),
-        //     //         MAP_MAX_BOUNDS
-        //     //     ).addTo(MAP);
-        //     // });
-        // }
 
         window.generate_heatmap = function generate_heatmap(all_answers_geojson, point_radius, blur_factor, zoom_level) {
             // i tried using some weird 5-year-old leaflet plugin but it was crap
