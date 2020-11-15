@@ -79,7 +79,7 @@ class DbPostgres(IDb):
     def get_all_answers(self):
         with psycopg2.connect(DATABASE_URL, sslmode='require') as conn:
             with conn.cursor() as cursor:
-                cursor.execute("SELECT point_json, answer_val FROM Answer;")
+                cursor.execute("SELECT point_json, answer_val FROM Answer ORDER BY answer_time ASC;")
 
                 return {
                     "type": "FeatureCollection",

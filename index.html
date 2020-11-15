@@ -22,7 +22,6 @@
     <meta name="theme-color" content="#ffffff">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
-  <script src="/assets/leaflet-heat.js"></script>
   <style>
     @font-face {
         font-family: 'Heebo';
@@ -30,6 +29,14 @@
     }
     body, .btn-pretty {
         font-family: 'Heebo', sans-serif;
+    }
+    .preloaded {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 1px;
+        height: 1px;
+        z-index: -999;
     }
     #map {position: absolute; top: 0; right: 0; bottom: 0; left: 0;}
     .hidden {display: none !important;}
@@ -324,8 +331,8 @@
   <script>
     
     (function() {
-        const TLV_COLOR = '#63acbe';
-        const JAFFA_COLOR = '#a9299c';
+        const TLV_COLOR = `rgba(${0x63}, ${0xac}, ${0xbe}, 1)`; //'#63acbe';
+        const JAFFA_COLOR = `rgba(${0xa9}, ${0x29}, ${0x9c}, 1)`; //'#a9299c';
 
         let GLOB_is_dark_mode = false;
         let GLOB_is_dark_forced = false; // are we forcing light/dark mode currently?
@@ -388,6 +395,15 @@
             renew_session_interval: null
         };
 
+        const ASSETS_TO_PRELOAD = [
+            // conveniently in order of appearance for typical user(tm)
+            "/assets/switch_light.svg",
+            "/assets/switch_dark.svg",
+            "/assets/marker_q.svg",
+            "/assets/twemoji_catheart.svg",
+            "/assets/marker_jaffa.svg",
+            "/assets/marker_tlv.svg"
+        ];
         const PRELOADED_IMAGE_XYZ  = window.PRELOADED_IMAGE_XYZ  = [];
         const PRELOADED_IMAGE_OBJS = window.PRELOADED_IMAGE_OBJS = [[], []];
         const TILE_SIZE = 512;
@@ -420,16 +436,7 @@
                 crossOrigin: true
         }).addTo(MAP);
 
-        const HEAT_LAYER_TLV = L.heatLayer([], {
-            minOpacity: 0.6,
-            gradient: {0.0: 'rgba(0.0, 0.0, 0.0, 0.0)', 1.0: 'rgba(99, 172, 190, 0.6)'}
-        }).addTo(MAP);
-        
-
-        const HEAT_LAYER_JAFFA = L.heatLayer([], {
-            minOpacity: 0.6,
-            gradient: {0.0: 'rgba(0.0, 0.0, 0.0, 0.0)', 1.0: 'rgba(191, 83, 180, 0.6)'}
-        }).addTo(MAP);
+        const HEAT_LAYER = L.imageOverlay("", MAP_MAX_BOUNDS);
 
         const QUESTION_VIEW_ZOOM = 16;
 
@@ -507,11 +514,30 @@
             STATE.markers = null;
 
             STATE.answer_markers = null;
-            HEAT_LAYER_TLV.setLatLngs([]);
-            HEAT_LAYER_JAFFA.setLatLngs([]);
+            HEAT_LAYER.remove();
+            const blob = HEAT_LAYER.getUrl();
+            if (blob && blob.startsWith && blob.startsWith("blob")) {
+                URL.revokeObjectURL(blob);
+            }
         }
 
         function loadQuestionsFromServer() {
+            let asset_preload_done = false;
+            let question_load_done = false;
+            const finishedLoading = function() {
+                document.getElementById('loading-page').classList.add('hidden');
+                document.getElementById('intro-page').classList.remove('hidden');
+                resize_map();
+            };
+
+            preload_asset_images(ASSETS_TO_PRELOAD, function() {
+                asset_preload_done = true;
+
+                if (question_load_done) {
+                    finishedLoading();
+                }
+            });
+
             fetch('/generate_session').then(function(response) {
                 return response.json();
             }).then(function(o) {
@@ -557,9 +583,10 @@
                     5 * 60 * 1000
                 );
 
-                document.getElementById('loading-page').classList.add('hidden');
-                document.getElementById('intro-page').classList.remove('hidden');
-                resize_map();
+                question_load_done = true;
+                if (asset_preload_done) {
+                    finishedLoading();
+                }
             });
         }
 
@@ -632,25 +659,14 @@
                 clear_renew_session_interval();
 
                 // STATE.markers.map((m) => m.remove()); // remove quesion markers
-                STATE.answer_markers = [[], []];
-                for (let i = 0; i < o.features.length; i++) {
-                    const f = o.features[i];
+                STATE.answer_markers = generate_heatmap(
+                    o, 100, 0.7, 14
+                );
 
-                    const [x, y] = f.geometry.coordinates;
-                    const is_jaffa = f.properties.answer;
-
-                    STATE.answer_markers[is_jaffa|0].push(
-                        [y, x, 1]
-                        // L.marker(
-                        //     [y, x],
-                        //     {icon: is_jaffa ? MARKER_JAFFA : MARKER_TLV}
-                        // ).addTo(MAP)
-                    );
-                }
-
-                HEAT_LAYER_TLV.setLatLngs(STATE.answer_markers[0]);
-                HEAT_LAYER_JAFFA.setLatLngs(STATE.answer_markers[1]);
-                
+                STATE.answer_markers.toBlob(function(blob) {
+                    HEAT_LAYER.setUrl(URL.createObjectURL(blob));
+                    HEAT_LAYER.addTo(MAP);
+                });
 
                 // const tlv_point = 32.063602;
                 // const jaf_point = 32.040754;
@@ -702,10 +718,13 @@
                 .replace("{r}", (L.Browser.retina && "@2x") || "");
         }
 
-        function preload_image_impl(src, onload) {
+        function preload_image_impl(src, onload, onerror) {
             const img = document.createElement('img');
             if (onload) {
                 img.addEventListener('load', onload);
+            }
+            if (onerror) {
+                img.addEventListener('error', onerror);
             }
             img.classList.add('preloaded');
             img.width = 1;
@@ -720,6 +739,45 @@
             PRELOADED_IMAGE_XYZ.push(xyz);
 
             PRELOADED_IMAGE_OBJS[mode_idx].push(preload_image_impl(get_tile_src(MAP_STYLES[mode_idx], xyz), onload));
+        }
+
+        const MAX_ASSET_PRELOAD_MS = 1500;
+
+        function preload_asset_images(all_urls, on_all_done) {
+            let loaded_or_erred = 0;
+            const total_imgs = all_urls.length;
+            let done = false;
+            const images = [];
+
+            const inc_counter = function() {
+                loaded_or_erred += 1;
+                if (loaded_or_erred >= total_imgs && !done) {
+                    done = true;
+                    on_all_done(images);
+                }
+            }
+
+            // i don't want random asset preloading fails to make the initial loading hang forever
+            // (did you know? the internet is shit)
+            // so there's a 1.5-second maximum time that i allow the asset preloading to take
+            setTimeout(function() {
+                if (!done) {
+                    done = true;
+                    console.warn("asset loading timeout reached");
+                    on_all_done(images);
+                }
+            }, MAX_ASSET_PRELOAD_MS);
+
+            for (const url of all_urls) {
+                images.push(preload_image_impl(
+                    url,
+                    inc_counter,
+                    function(error_data_hopefully) {
+                        console.error('error loading asset', error_data_hopefully);
+                        inc_counter();
+                    }
+                ));
+            }
         }
 
         function clear_map_images_cache() {
@@ -796,6 +854,80 @@
                     }
                 });
             });
+        }
+
+        // window.test_generate_heatmap = function test_generate_heatmap() {
+        //     // window.HEATMAP_CANVAS = generate_heatmap(
+        //     //     [[34.7750, 32.0735, 0], [34.7616, 32.0599, 1]], 30, 4, 14
+        //     // );
+
+        //     // HEATMAP_CANVAS.toBlob(function(blob) {
+        //     //     window.HEATMAP_BLOB = blob;
+
+        //     //     window.HEATMAP_LAYER = L.imageOverlay(
+        //     //         URL.createObjectURL(blob),
+        //     //         MAP_MAX_BOUNDS
+        //     //     ).addTo(MAP);
+        //     // });
+        // }
+
+        window.generate_heatmap = function generate_heatmap(all_answers_geojson, point_radius, blur_factor, zoom_level) {
+            // i tried using some weird 5-year-old leaflet plugin but it was crap
+            // so i'll just make my own????
+
+            const bounds_nw = MAP_MAX_BOUNDS.getNorthWest();
+            const bounds_se = MAP_MAX_BOUNDS.getSouthEast();
+
+            // TODO: retina???? :|:|:|
+
+            const [[minx, miny], [maxx, maxy]] = [
+                [
+                    Math.floor(TILE_SIZE * long2tileFrac(bounds_nw.lng, zoom_level)),
+                    Math.floor(TILE_SIZE * lat2tileFrac(bounds_nw.lat, zoom_level))
+                ],
+                [
+                    Math.round(TILE_SIZE * long2tileFrac(bounds_se.lng, zoom_level)),
+                    Math.round(TILE_SIZE * lat2tileFrac(bounds_se.lat, zoom_level))
+                ]
+            ];
+
+            const canvas = document.createElement("canvas");
+
+            canvas.width = maxx - minx;
+            canvas.height = maxy - miny;
+            canvas.style.background = "transparent";
+
+            const ctx = canvas.getContext("2d");
+
+            ctx.strokeStyle = "none";
+            
+            const tlv_color_trans =   TLV_COLOR.replace(/([,]\s*)1[)]/, (m, p) => (p + "0.4)"));
+            const jaf_color_trans = JAFFA_COLOR.replace(/([,]\s*)1[)]/, (m, p) => (p + "0.4)"));
+
+            for (let i = 0; i < all_answers_geojson.features.length; i++) {
+                const f = all_answers_geojson.features[i];
+
+                const [lng, lat] = f.geometry.coordinates;
+                const is_jaffa = f.properties.answer;
+
+                const x = Math.round(TILE_SIZE * long2tileFrac(lng, zoom_level) - minx);
+                const y = Math.round(TILE_SIZE * lat2tileFrac(lat, zoom_level) - miny);
+
+                const gradient = ctx.createRadialGradient(
+                    x, y, point_radius * Math.max(0, Math.min(1, 1-blur_factor)),
+                    x, y, point_radius
+                );
+
+                gradient.addColorStop(0, is_jaffa ? jaf_color_trans : tlv_color_trans);
+                gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.ellipse(x, y, point_radius, point_radius, 0, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+
+            return canvas;
         }
 
         window.addEventListener("resize", function() {
