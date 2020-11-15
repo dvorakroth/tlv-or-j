@@ -5,11 +5,14 @@ import random
 import threading
 import time
 import os
+import math
 
 import cherrypy
 import shapely.geometry
 import psycopg2
 from psycopg2.extras import execute_batch
+
+from line_of_best_fit import get_boundary_line
 
 def random_point_in_polygon(polygon, force_minx=None, force_maxx=None, force_miny=None, force_maxy=None):
     result = None
@@ -33,6 +36,15 @@ def random_point_in_polygon(polygon, force_minx=None, force_maxx=None, force_min
 def randomString(stringLength):
     letters = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f']
     return ''.join(random.choice(letters) for i in range(stringLength))
+
+def long2tileFrac(lon,zoom):
+    return (lon+180.0)/360.0 * (2.0 ** zoom)
+
+def lat2tileFrac(lat,zoom):
+    return (
+        1.0-math.log(math.tan(lat*math.pi/180.0) + 1.0/math.cos(lat*math.pi/180.0))/math.pi
+    )/2.0 * (2.0 ** zoom)
+
 
 valid_answers = [0, 1]
 
@@ -207,6 +219,32 @@ class TlvOrJServer:
     def get_all_answers(self):
         return self.db.get_all_answers()
     
+    def get_boundary_for_answers(self, answers_geojson):
+        # haha gotta convert everything to xyz coordinates at zoom 14 because magic haha
+        ZOOM = 14
+        xyj = [
+            [
+                #long2tileFrac(f["geometry"]["coordinates"][0], ZOOM),
+                #lat2tileFrac(f["geometry"]["coordinates"][1], ZOOM),
+                f["geometry"]["coordinates"][0],
+                f["geometry"]["coordinates"][1],
+                f["properties"]["answer"]
+            ]
+            for f in answers_geojson["features"]
+        ]
+
+        minlon, minlat, maxlon, maxlat = city_poly.bounds
+        minx = minlon #long2tileFrac(minlon, ZOOM)
+        maxx = maxlon # long2tileFrac(maxlon, ZOOM)
+        # miny = lat2tileFrac(maxlat, ZOOM)
+        # maxy = lat2tileFrac(minlat, ZOOM)
+
+        m = get_boundary_line(
+            xyj, minlon, maxlon, minlat, maxlat
+        )
+
+        return m
+    
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def answer_session(self, session_id, answers, get_all_answers=False):
@@ -224,7 +262,11 @@ class TlvOrJServer:
         self.db.store_new_answers(points, answers)
 
         if get_all_answers:
-            return self.db.get_all_answers()
+            all_answers = self.db.get_all_answers()
+            all_answers["properties"] = {
+                "boundary": self.get_boundary_for_answers(all_answers)
+            }
+            return all_answers
     
     @cherrypy.expose
     @cherrypy.tools.json_out()
