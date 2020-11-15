@@ -651,20 +651,23 @@
             fetch(`/answer_session?session_id=${STATE.session_id}&answers=${answers}&get_all_answers=1`).then(function(response) {
                 return response.json();
             }).then(function(o) {
-                document.getElementById('results-loading-page').classList.add('hidden');
-                document.getElementById('all-answers-page').classList.remove('hidden');
-                resize_map();
-
+                
                 clear_renew_session_interval();
                 
                 const heatmap = generate_heatmap(
-                    o, 100, 0.7, 14
+                    o, 100, 0.7, 1, 14
                 );
 
                 heatmap.toBlob(function(blob) {
                     STATE.answer_markers = URL.createObjectURL(blob);
                     HEAT_LAYER.setUrl(STATE.answer_markers);
+                    HEAT_LAYER.setOpacity(0.7);
                     HEAT_LAYER.addTo(MAP);
+
+                    // TODO: maybe add a timeout? or somehow hook into HEAT_LAYER.getElement().onload?
+                    document.getElementById('results-loading-page').classList.add('hidden');
+                    document.getElementById('all-answers-page').classList.remove('hidden');
+                    resize_map();
                 });
 
                 // const tlv_point = 32.063602;
@@ -855,7 +858,9 @@
             });
         }
 
-        window.generate_heatmap = function generate_heatmap(all_answers_geojson, point_radius, blur_factor, zoom_level) {
+        function generate_heatmap(
+            all_answers_geojson, point_radius, blur_factor, max_opacity, zoom_level
+        ) {
             // i tried using some weird 5-year-old leaflet plugin but it was crap
             // so i'll just make my own????
 
@@ -884,9 +889,15 @@
             const ctx = canvas.getContext("2d");
 
             ctx.strokeStyle = "none";
+
+            const opacity = "" + Math.max(0, Math.min(1, max_opacity));
             
-            const tlv_color_trans =   TLV_COLOR.replace(/([,]\s*)1[)]/, (m, p) => (p + "0.4)"));
-            const jaf_color_trans = JAFFA_COLOR.replace(/([,]\s*)1[)]/, (m, p) => (p + "0.4)"));
+            const tlv_color_trans =   TLV_COLOR.replace(/([,]\s*)1[)]/, (m, p) => (p + opacity + ")"));
+            const jaf_color_trans = JAFFA_COLOR.replace(/([,]\s*)1[)]/, (m, p) => (p + opacity + ")"));
+
+            const tlv_color_trans0 =   TLV_COLOR.replace(/([,]\s*)1[)]/, (m, p) => (p + "0)"));
+            const jaf_color_trans0 = JAFFA_COLOR.replace(/([,]\s*)1[)]/, (m, p) => (p + "0)"));
+
 
             for (let i = 0; i < all_answers_geojson.features.length; i++) {
                 const f = all_answers_geojson.features[i];
@@ -903,7 +914,7 @@
                 );
 
                 gradient.addColorStop(0, is_jaffa ? jaf_color_trans : tlv_color_trans);
-                gradient.addColorStop(1, "rgba(0, 0, 0, 0)");
+                gradient.addColorStop(1, is_jaffa ? jaf_color_trans0 : tlv_color_trans0);
 
                 ctx.fillStyle = gradient;
                 ctx.beginPath();
