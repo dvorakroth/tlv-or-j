@@ -443,7 +443,7 @@
                 crossOrigin: true
         }).addTo(MAP);
 
-        const BOUNDARY_LAYER = L.polyline([], {color: "red"});
+        // const BOUNDARY_LAYER = L.polyline([], {color: "red"});
         const HEAT_LAYER = L.imageOverlay("", MAP_MAX_BOUNDS);
 
         const QUESTION_VIEW_ZOOM = 16;
@@ -520,8 +520,8 @@
             }
             STATE.markers = null;
 
-            BOUNDARY_LAYER.remove();
-            BOUNDARY_LAYER.setLatLngs([]);
+            // BOUNDARY_LAYER.remove();
+            // BOUNDARY_LAYER.setLatLngs([]);
             HEAT_LAYER.remove();
             HEAT_LAYER.setUrl("");
             if (STATE.answer_markers) {
@@ -675,7 +675,7 @@
                     o, 100, 0.7, 1, 14
                 );
 
-                const boundary = o.properties.boundary.map(([x, y]) => [y, x])
+                // const boundary = o.properties.boundary.map(([x, y]) => [y, x])
 
                 heatmap.toBlob(function(blob) {
                     STATE.answer_markers = URL.createObjectURL(blob);
@@ -683,8 +683,8 @@
                     HEAT_LAYER.setOpacity(0.7);
                     HEAT_LAYER.addTo(MAP);
 
-                    BOUNDARY_LAYER.setLatLngs(boundary);
-                    BOUNDARY_LAYER.addTo(MAP);
+                    // BOUNDARY_LAYER.setLatLngs(boundary);
+                    // BOUNDARY_LAYER.addTo(MAP);
 
                     // TODO: maybe add a timeout? or somehow hook into HEAT_LAYER.getElement().onload?
                     document.getElementById('results-loading-page').classList.add('hidden');
