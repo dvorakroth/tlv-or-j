@@ -95,6 +95,13 @@
         margin-right: 15px;
     }
 
+    #btn-tlv:disabled,
+    #btn-jaf:disabled {
+        background: #777;
+        color: #444;
+        text-shadow: none;
+    }
+
     #btn-start {
         background-color: #800;
     }
@@ -104,19 +111,19 @@
     }
 
     @media (hover: hover) and (pointer: fine) {
-        #btn-tlv:hover, #btn-tlv:focus {
+        #btn-tlv:not(:disabled):hover, #btn-tlv:not(:disabled):focus {
             background: #6fe0fc;
         }
 
-        #btn-jaf:hover, #btn-jaf:focus {
+        #btn-jaf:not(:disabled):hover, #btn-jaf:not(:disabled):focus {
             background-color: #bf53b4;
         }
 
-        #btn-start:hover, #btn-start:focus {
+        #btn-start:not(:disabled):hover, #btn-start:not(:disabled):focus {
             background-color: #d22;
         }
 
-        #btn-playagain:hover, #btn-playagain:focus {
+        #btn-playagain:not(:disabled):hover, #btn-playagain:not(:disabled):focus {
             background-color: #70ade3;
         }
     }
@@ -603,8 +610,13 @@
             const q = STATE.questions[STATE.question_idx];
             STATE.markers[STATE.question_idx] = L.marker(q, {icon:MARKER_Q}).addTo(MAP);
 
-            setTimeout(function() {STATE.is_animating = false;}, 1500);
-            MAP.flyTo(q, QUESTION_VIEW_ZOOM, {duration: 1.5});
+            let ANIM_LEN_MS = 1500;
+            setTimeout(function() {
+                STATE.is_animating = false;
+                BTN_TLV.removeAttribute('disabled');
+                BTN_JAF.removeAttribute('disabled');
+            }, ANIM_LEN_MS);
+            MAP.flyTo(q, QUESTION_VIEW_ZOOM, {duration: ANIM_LEN_MS / 1000.0});
         }
 
         function addAnswer(isJaffa) {
@@ -627,6 +639,8 @@
 
             STATE.answers[STATE.question_idx] = isJaffa;
             STATE.is_animating = true;
+            BTN_JAF.setAttribute('disabled', 'disabled');
+            BTN_TLV.setAttribute('disabled', 'disabled');
 
             setTimeout(() => {
                 reward.remove();
@@ -705,8 +719,11 @@
             });
         }
 
-        document.getElementById('btn-tlv').addEventListener('click', event => { addAnswer(false); });
-        document.getElementById('btn-jaf').addEventListener('click', event => { addAnswer(true);  });
+        const BTN_TLV = document.getElementById('btn-tlv');
+        const BTN_JAF = document.getElementById('btn-jaf');
+
+        BTN_TLV.addEventListener('click', event => { addAnswer(false); });
+        BTN_JAF.addEventListener('click', event => { addAnswer(true);  });
         document.getElementById('btn-start').addEventListener('click', event => {
             document.getElementById('intro-page').classList.add('hidden');
             document.getElementById('question-page').classList.remove('hidden');
