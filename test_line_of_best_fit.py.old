@@ -1,0 +1,21 @@
+import psycopg2
+import json
+import shapely.geometry
+import line_of_best_fit
+from importlib import reload
+
+with open('citylimits.geojson.json', 'r', encoding='utf-8-sig') as f:
+    city_poly = shapely.geometry.shape(json.load(f)['features'][0]['geometry'])
+
+min_x_deg, min_y_deg, max_x_deg, max_y_deg = city_poly.bounds
+
+with psycopg2.connect(DATABASE_URL, sslmode='require') as conn:
+    with conn.cursor() as cursor:
+        cursor.execute("SELECT point_json, answer_val FROM Answer ORDER BY answer_time ASC;")
+        points_xyj = [
+            json.loads(point_json) + [int(answer_val)]
+            for point_json, answer_val in cursor.fetchall()
+        ]
+
+line_of_best_fit = reload(line_of_best_fit)
+img = line_of_best_fit.get_heatmap_pseudomercator(points_xyj, min_x_deg, max_x_deg, min_y_deg, max_y_deg, 14, 512); img.show()
