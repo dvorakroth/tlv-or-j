@@ -884,7 +884,7 @@
         }
 
         function generate_heatmap(
-            all_answers_geojson, point_radius, blur_factor, max_opacity, zoom_level
+            all_answers_xyj, point_radius, blur_factor, max_opacity, zoom_level
         ) {
             // i tried using some weird 5-year-old leaflet plugin but it was crap
             // so i'll just make my own????
@@ -924,11 +924,8 @@
             const jaf_color_trans0 = JAFFA_COLOR.replace(/([,]\s*)1[)]/, (m, p) => (p + "0)"));
 
 
-            for (let i = 0; i < all_answers_geojson.features.length; i++) {
-                const f = all_answers_geojson.features[i];
-
-                const [lng, lat] = f.geometry.coordinates;
-                const is_jaffa = f.properties.answer;
+            for (let i = 0; i < all_answers_xyj.length; i++) {
+                const [lng, lat, is_jaffa] = all_answers_xyj[i];
 
                 const x = Math.round(TILE_SIZE * long2tileFrac(lng, zoom_level) - minx);
                 const y = Math.round(TILE_SIZE * lat2tileFrac(lat, zoom_level) - miny);

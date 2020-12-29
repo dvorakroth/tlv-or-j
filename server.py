@@ -12,7 +12,7 @@ import shapely.geometry
 import psycopg2
 from psycopg2.extras import execute_batch
 
-from line_of_best_fit import get_boundary_line
+# from line_of_best_fit import get_boundary_line
 
 def random_point_in_polygon(polygon, force_minx=None, force_maxx=None, force_miny=None, force_maxy=None):
     result = None
@@ -93,22 +93,10 @@ class DbPostgres(IDb):
             with conn.cursor() as cursor:
                 cursor.execute("SELECT point_json, answer_val FROM Answer ORDER BY answer_time ASC;")
 
-                return {
-                    "type": "FeatureCollection",
-                    "features": [
-                        {
-                            "type": "Feature",
-                            "geometry": {
-                                "type": "Point",
-                                "coordinates": json.loads(point_json)
-                            },
-                            "properties": {
-                                "answer": int(answer_val)
-                            }
-                        }
-                        for point_json, answer_val in cursor.fetchall()
-                    ]
-                }
+                return [
+                    json.loads(point_json) + [float(answer_val)]
+                    for point_json, answer_val in cursor.fetchall()
+                ]
 
     def new_session(self, points):
         with psycopg2.connect(DATABASE_URL, sslmode='require') as conn:
@@ -219,29 +207,25 @@ class TlvOrJServer:
     def get_all_answers(self):
         return self.db.get_all_answers()
     
-    def get_boundary_for_answers(self, answers_geojson):
-        # haha gotta convert everything to xyz coordinates at zoom 14 because magic haha
-        ZOOM = 14
-        xyj = [
-            [
-                #long2tileFrac(f["geometry"]["coordinates"][0], ZOOM),
-                #lat2tileFrac(f["geometry"]["coordinates"][1], ZOOM),
-                f["geometry"]["coordinates"][0],
-                f["geometry"]["coordinates"][1],
-                f["properties"]["answer"]
-            ]
-            for f in answers_geojson["features"]
-        ]
+    # def get_boundary_for_answers(self, answers_geojson):
+    #     # haha gotta convert everything to xyz coordinates at zoom 14 because magic haha
+    #     ZOOM = 14
+    #     xyj = [
+    #         [
+    #             #long2tileFrac(f["geometry"]["coordinates"][0], ZOOM),
+    #             #lat2tileFrac(f["geometry"]["coordinates"][1], ZOOM),
+    #             f["geometry"]["coordinates"][0],
+    #             f["geometry"]["coordinates"][1],
+    #             f["properties"]["answer"]
+    #         ]
+    #         for f in answers_geojson["features"]
+    #     ]
 
-        minlon, minlat, maxlon, maxlat = city_poly.bounds
-        minx = minlon #long2tileFrac(minlon, ZOOM)
-        maxx = maxlon # long2tileFrac(maxlon, ZOOM)
-        # miny = lat2tileFrac(maxlat, ZOOM)
-        # maxy = lat2tileFrac(minlat, ZOOM)
+    #     minlon, minlat, maxlon, maxlat = city_poly.bounds
 
-        m = get_boundary_line(
-            xyj, minlon, maxlon, minlat, maxlat
-        )
+        # m = get_boundary_line(
+        #     xyj, minlon, maxlon, minlat, maxlat
+        # )
 
         return m
     
@@ -263,9 +247,9 @@ class TlvOrJServer:
 
         if get_all_answers:
             all_answers = self.db.get_all_answers()
-            all_answers["properties"] = {
-                "boundary": self.get_boundary_for_answers(all_answers)
-            }
+            # all_answers["properties"] = {
+            #     "boundary": self.get_boundary_for_answers(all_answers)
+            # }
             return all_answers
     
     @cherrypy.expose
