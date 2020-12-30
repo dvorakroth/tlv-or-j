@@ -496,7 +496,9 @@
 
             minZoom: MIN_ZOOM_USUAL,
             maxZoom: 20,
-            maxBounds: MAP_MAX_BOUNDS
+            maxBounds: MAP_MAX_BOUNDS,
+
+            maxBoundsViscosity: 1.0,
         }).setView([32.058225, 34.770073], 14);
 
         const LAYER = L.tileLayer(
