@@ -243,6 +243,7 @@
         padding: 0;
         margin-top: 0;
         width: 50%;
+        min-width: 180px;
     }
 
     ul.tlvorj-maplegend > li.subheading {
@@ -311,13 +312,33 @@
             border-bottom: none;
 
             box-sizing: border-box;
+            padding: 24px 20px; /* down from padding: 40px 20px; */
 
             min-height: 240px;
+        }
+
+        p {
+            margin: 10px 0; /* down from the default 1em = 19.2px in this context */
         }
 
         #map { 
             bottom: 240px;
             top: 0;
+        }
+    }
+
+    @media screen and (max-width: 400px) {
+           ul.tlvorj-maplegend {
+            min-width: unset;
+        }
+    }
+
+    @media screen and (max-width: 350px) {
+        /* i had an iphone se up until nov 2019 and i know it's still supported as of now (dec 2020)
+           so i think it's not too much to plan for those 3 ppl who might visit this site with tiny phones */
+        
+        .dramatic-or {
+            display: none;
         }
     }
   </style>
@@ -341,7 +362,7 @@
     </section>
 
     <section id="question-page" class="hidden">
-        <h1>באיזו עיר הנקודה המסומנת?</h1>
+        <h1>באיזו עיר נמצאת הנקודה המסומנת?</h1>
         <button class="btn-pretty" id="btn-tlv" disabled>תל אביב</button>
         <span class="dramatic-or">או</span>
         <button class="btn-pretty" id="btn-jaf" disabled>יפו</button>
@@ -354,7 +375,6 @@
 
     <section id="all-answers-page" class="hidden">
         <h1>התשובות הסופיות</h1>
-        <p>הנה התשובות של כולן.ם! נכון שעכשיו המצב הרבה יותר ברור?</p>
         <div class="cols-container">
             <ul class="tlvorj-maplegend">
                 <li class="subheading">את.ה ענית:</li>
