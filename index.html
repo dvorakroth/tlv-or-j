@@ -678,7 +678,7 @@
 
             if (STATE.question_idx > 0) {
                 // i checked manually, and the distance between the opposite (sw/ne) corners of tlv is about 0.1303 degrees
-                // and i want that distance to take exactly 2000 ms to traverse
+                // and i want that distance to take exactly 3000 ms to traverse
                 const FLY_SPEED = 0.1303 / 3000; // deg/ms
 
                 const [prev_y, prev_x] = STATE.questions[STATE.question_idx - 1];
