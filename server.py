@@ -49,8 +49,8 @@ def lat2tileFrac(lat,zoom):
 valid_answers = [0, 1]
 
 city_poly = None
-preferred_maxx = 34.7807
-preferred_maxy = 32.0646
+preferred_maxx = 34.7654 # 34.7807
+preferred_maxy = 32.0582 # 32.0646
 
 class IDb:
     def store_new_answers(self, points, answers):
@@ -259,14 +259,14 @@ class TlvOrJServer:
         points = [
             random_point_in_polygon(
                 city_poly,
-                force_miny=preferred_maxy + random.uniform(-0.04, 0)
+                force_miny=preferred_maxy + random.uniform(-0.02, 0)
             )
             for i in range(2)
         ] + [
             random_point_in_polygon(
                 city_poly,
-                force_maxx=preferred_maxx + random.uniform(0, 0.03),
-                force_maxy=preferred_maxy + random.uniform(0, 0.03)
+                force_maxx=preferred_maxx + random.uniform(0, 0.01),
+                force_maxy=preferred_maxy + random.uniform(0, 0.005)
             )
             for i in range(3)
         ]
