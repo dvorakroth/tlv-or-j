@@ -832,6 +832,10 @@
                     document.getElementById('results-loading-page').classList.add('hidden');
                     document.getElementById('all-answers-page').classList.remove('hidden');
                     resize_map();
+
+                    MAP.dragging.enable();
+                    MAP.options.touchZoom = true;
+                    MAP.options.scrollWheelZoom = true;
                 });
 
                 // const tlv_point = 32.063602;
@@ -869,6 +873,9 @@
         document.getElementById('btn-start').addEventListener('click', event => {
             document.getElementById('intro-page').classList.add('hidden');
             document.getElementById('question-page').classList.remove('hidden');
+            MAP.dragging.disable();
+            MAP.options.touchZoom = 'center';
+            MAP.options.scrollWheelZoom = 'center';
             resize_map();
             showNextPoint();
         });
