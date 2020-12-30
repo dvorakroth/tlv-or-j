@@ -857,6 +857,7 @@
                     resize_map();
 
                     MAP.dragging.enable();
+                    MAP.setMaxBounds(MAP_MAX_BOUNDS);
                     MAP.options.touchZoom = true;
                     MAP.options.scrollWheelZoom = true;
                 });
@@ -897,6 +898,7 @@
             document.getElementById('intro-page').classList.add('hidden');
             document.getElementById('question-page').classList.remove('hidden');
             MAP.dragging.disable();
+            MAP.setMaxBounds(null); // no point in having max bounds when the user can only zoom (and it sometimes bugs as a bonus)
             MAP.options.touchZoom = 'center';
             MAP.options.scrollWheelZoom = 'center';
             resize_map();
