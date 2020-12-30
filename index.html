@@ -457,6 +457,12 @@
         const MIN_ZOOM_USUAL = 13;
         const MIN_ZOOM_ALL_ANSWERS = 12;
         const MAP_MAX_BOUNDS = L.latLngBounds(L.latLng(32.017357, 34.724041), L.latLng(32.159226, 34.867250));
+        const MAP_FINAL_VIEW_BOUNDS = L.latLngBounds(
+            // southwest: just outside tlv/by border
+            L.latLng(32.0290,34.7412),
+            // northeast: beggin/hashmonaim
+            L.latLng(32.0693,34.7877)
+        )
 
         const MAP_STYLES = [
             'https://api.maptiler.com/maps/47c517fb-70bf-4903-89b4-2033ebbbedb1/{z}/{x}/{y}{r}.png?key=XQ643Hu2aW2ClNCu8gL4', // light
@@ -717,7 +723,7 @@
             clear_map_images_cache();
 
             MAP.setMinZoom(MIN_ZOOM_ALL_ANSWERS);
-            MAP.flyToBounds(MAP_MAX_BOUNDS);
+            MAP.flyToBounds(MAP_FINAL_VIEW_BOUNDS);
 
             const answers = STATE.answers.map((x) => x|0).join(',');
             
