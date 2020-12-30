@@ -203,10 +203,10 @@ class TlvOrJServer:
     def index(self):
         return open('index.html')
 
-    @cherrypy.expose
-    @cherrypy.tools.json_out()
-    def get_all_answers(self):
-        return self.db.get_all_answers()
+    # @cherrypy.expose
+    # @cherrypy.tools.json_out()
+    # def get_all_answers(self):
+    #     return self.db.get_all_answers()
     
     # def get_boundary_for_answers(self, answers_geojson):
     #     # haha gotta convert everything to xyz coordinates at zoom 14 because magic haha
