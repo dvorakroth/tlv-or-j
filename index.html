@@ -394,7 +394,30 @@
 </div>
   
   <script>
-    
+
+    if (navigator.userAgent && navigator.userAgent.indexOf("Macintosh") >= 0 && navigator.userAgent.indexOf("AppleWebKit") >= 0) {
+        console.log("applying 1px extra tiles fix for chrome/safari on osx :|");
+        // sometimes i hate open source libraries so much hahaha this is hell
+        /* 
+        * Workaround for 1px lines appearing in some browsers due to fractional transforms
+        * and resulting anti-aliasing.
+        * https://github.com/Leaflet/Leaflet/issues/3575
+        */
+        (function(){
+            var originalInitTile = L.GridLayer.prototype._initTile
+            L.GridLayer.include({
+                _initTile: function (tile) {
+                    originalInitTile.call(this, tile);
+
+                    var tileSize = this.getTileSize();
+
+                    tile.style.width = tileSize.x + 1 + 'px';
+                    tile.style.height = tileSize.y + 1 + 'px';
+                }
+            });
+        })();
+    }
+
     (function() {
         const TLV_COLOR = `rgba(${0x63}, ${0xac}, ${0xbe}, 1)`; //'#63acbe';
         const JAFFA_COLOR = `rgba(${0xa9}, ${0x29}, ${0x9c}, 1)`; //'#a9299c';
