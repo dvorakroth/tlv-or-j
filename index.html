@@ -486,7 +486,8 @@
             is_animating: true,
 
             is_loading_results: false,
-            renew_session_interval: null
+            renew_session_interval: null,
+            current_session_ttl: null
         };
 
         const ASSETS_TO_PRELOAD = [
@@ -581,6 +582,7 @@
             STATE.questions = null;
             STATE.question_idx = -1;
             STATE.answers = null;
+            STATE.current_session_ttl = null;
             clear_map_images_cache();
             clear_answer_markers();
 
@@ -647,6 +649,7 @@
                 STATE.question_idx = -1; 
                 STATE.answers = STATE.questions.map(() => null);
                 STATE.markers = STATE.questions.map(() => null);
+                STATE.current_session_ttl = o.ttl;
 
                 const num_qs = STATE.questions.length;
                 let preload_counter = 0;
@@ -667,7 +670,6 @@
                             }
                         }
                     );
-                    // preload_tile_neighborhood(q[0], q[1], QUESTION_VIEW_ZOOM - 2, GLOB_is_dark_mode|0);
                 }
 
                 clear_renew_session_interval();
@@ -676,7 +678,11 @@
                     function() {
                         console.log("renewing session");
                         if (STATE.session_id && STATE.question_idx < (STATE.questions || []).length) {
-                            fetch('/renew_session?session_id=' + STATE.session_id);
+                            fetch('/renew_session?session_id=' + STATE.session_id).then(function (response) {
+                                return response.json();
+                            }).then(function(o) {
+                                STATE.current_session_ttl = o.ttl;
+                            });
                         } else {
                             clear_renew_session_interval();
                         }
@@ -797,6 +803,8 @@
                 return;
             }
 
+            if (reload_if_session_expired()) { return; } // this is here mainly as a backup, in case document.onvisibilitychange didn't fire
+
             const marker = STATE.markers[STATE.question_idx];
             marker.setIcon(isJaffa ? MARKER_JAFFA : MARKER_TLV);
 
@@ -838,6 +846,7 @@
             }).then(function(o) {
                 
                 clear_renew_session_interval();
+                STATE.current_session_ttl = null;
                 
                 const heatmap = generate_heatmap(
                     o, 100, 0.7, 1, 14
@@ -893,6 +902,8 @@
         BTN_TLV.addEventListener('click', event => { addAnswer(false); });
         BTN_JAF.addEventListener('click', event => { addAnswer(true);  });
         document.getElementById('btn-start').addEventListener('click', event => {
+            if (reload_if_session_expired()) { return; } // this is here mainly as a backup, in case document.onvisibilitychange didn't fire
+
             document.getElementById('intro-page').classList.add('hidden');
             document.getElementById('question-page').classList.remove('hidden');
             MAP.dragging.disable();
@@ -1182,6 +1193,36 @@
             }, 0);
         }
 
+
+        const LAST_FORCE_RELOAD = "LAST_FORCE_RELOAD";
+
+        document.addEventListener("visibilitychange", function() {
+            if (document.visibilityState === "visible") {
+                reload_if_session_expired();
+            }
+        });
+        
+        function reload_if_session_expired() {
+            if (STATE.current_session_ttl
+                && STATE.current_session_ttl - Math.floor(Date.now() / 1000) < 3600)
+            {
+                // if there's less than an hour remaining for the session to expire (or if it's already expired)
+                console.warn("session expired or very close to; reloading")
+
+                const lastForceReload = parseInt(window.localStorage.getItem(LAST_FORCE_RELOAD));
+                
+                if (!isNaN(lastForceReload) && lastForceReload && Date.now() - lastForceReload < 10 * 60 * 1000) {
+                    console.warn("recently reloaded! skipping this reload for fear of a reload loop bug"); // am i imagining bugs that'll never happen? idk
+                } else {
+                    window.localStorage.setItem(LAST_FORCE_RELOAD, "" + Math.floor(Date.now()));
+                    window.location.reload();
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
         
     })();
   </script>

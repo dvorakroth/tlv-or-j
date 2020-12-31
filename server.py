@@ -255,7 +255,9 @@ class TlvOrJServer:
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def renew_session(self, session_id):
-        return self.db.renew_session(session_id)
+        return {
+            "ttl": self.db.renew_session(session_id)
+        }
 
 config = {
     'global': {
