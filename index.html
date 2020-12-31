@@ -102,11 +102,11 @@
         text-shadow: none;
     }
 
-    #btn-start {
+    .btn-red {
         background-color: #800;
     }
 
-    #btn-playagain {
+    .btn-blue {
         background-color: #0054ae;
     }
 
@@ -119,11 +119,11 @@
             background-color: #bf53b4;
         }
 
-        #btn-start:not(:disabled):hover, #btn-start:not(:disabled):focus {
+        .btn-red:not(:disabled):hover, .btn-red:not(:disabled):focus {
             background-color: #d22;
         }
 
-        #btn-playagain:not(:disabled):hover, #btn-playagain:not(:disabled):focus {
+        .btn-blue:not(:disabled):hover, .btn-blue:not(:disabled):focus {
             background-color: #70ade3;
         }
     }
@@ -259,6 +259,10 @@
         text-align: right;
     }
 
+    #error-page p {
+        font-size: 180%;
+    }
+
     /* because this is plain css and not sass/less, i now have to duplicate the dark mode code */
     body.force-dark #main-ui {
         background-color: #000;
@@ -358,7 +362,7 @@
     <section id="intro-page" class="hidden">
         <h1>תל אביב או יפו?</h1>
         <p>הגבול בין תל אביב לבין יפו לגמרי מטושטש, אבל אם נעבוד ביחד, נוכל למצוא אותו שוב!</p>
-        <button class="btn-pretty" id="btn-start">שנתחיל?</button>
+        <button class="btn-pretty btn-red" id="btn-start">שנתחיל?</button>
     </section>
 
     <section id="question-page" class="hidden">
@@ -371,6 +375,11 @@
     <section id="results-loading-page" class="hidden">
         <div class="loading-indicator"></div>
         <span><br>התשובות עוברות עיבוד סופר מתקדם...</span>
+    </section>
+
+    <section id="error-page" class="hidden">
+        <p>אוי לא! היתה שגיאה כלשהי :(</p>
+        <button class="btn-pretty btn-red" id="btn-retry">שננסה שוב?</button>
     </section>
 
     <section id="all-answers-page" class="hidden">
@@ -395,7 +404,7 @@
                 </td>
             </tr>
         </table>
-        <button class="btn-pretty" id="btn-playagain">עוד הפעם!!</button>
+        <button class="btn-pretty btn-blue" id="btn-playagain">עוד הפעם!!</button>
     </section>
     
 </div>
@@ -695,6 +704,13 @@
                 if (asset_preload_done) {
                     finishedLoading();
                 }
+            }, function(err) {
+                // on error haha
+                console.error(err);
+
+                document.getElementById('loading-page').classList.add('hidden');
+                document.getElementById('error-page').classList.remove('hidden');
+                resize_map();
             });
         }
 
@@ -829,6 +845,9 @@
         }
 
         function showResultsLoader() {
+            clear_renew_session_interval();
+            STATE.current_session_ttl = null;
+
             document.getElementById('question-page').classList.add('hidden');
             document.getElementById('results-loading-page').classList.remove('hidden');
             resize_map();
@@ -845,9 +864,6 @@
             fetch(`/answer_session?session_id=${STATE.session_id}&answers=${answers}&get_all_answers=1`).then(function(response) {
                 return response.json();
             }).then(function(o) {
-                
-                clear_renew_session_interval();
-                STATE.current_session_ttl = null;
                 
                 const heatmap = generate_heatmap(
                     o, 100, 0.7, 1, 14
@@ -894,6 +910,13 @@
                 //         return {coord, is_jaffa};
                 //     }
                 // );
+            }, function(err) {
+                // on error haha
+                console.error(err);
+
+                document.getElementById('results-loading-page').classList.add('hidden');
+                document.getElementById('error-page').classList.remove('hidden');
+                resize_map();
             });
         }
 
@@ -918,6 +941,10 @@
             playAgain();
         });
         setTimeout(() => loadQuestionsFromServer(), 0);
+        document.getElementById('btn-retry').addEventListener('click', event => {
+            window.localStorage.clear();
+            window.location.reload();
+        });
 
 
         function get_tile_src(url_template, {x, y, z}) {
