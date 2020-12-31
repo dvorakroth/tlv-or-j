@@ -208,6 +208,10 @@ class TlvOrJServer:
 
         answers = list(map(int, str(answers).split(',')))
 
+        all_answers = None
+        if get_all_answers:
+            all_answers = self.db.get_all_answers()
+
         if len(answers) != len(points):
             raise ValueError('wrong number of answers')
 
@@ -217,11 +221,7 @@ class TlvOrJServer:
 
         self.db.store_new_answers(points, answers)
 
-        if get_all_answers:
-            all_answers = self.db.get_all_answers()
-            # all_answers["properties"] = {
-            #     "boundary": self.get_boundary_for_answers(all_answers)
-            # }
+        if all_answers is not None:
             return all_answers
     
     @cherrypy.expose
