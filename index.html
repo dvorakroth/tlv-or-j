@@ -128,7 +128,7 @@
         }
     }
 
-    .btn-pretty:active {
+    .btn-pretty:not(:disabled):active {
         top: 1px;
         left: 1px;
     }
@@ -242,6 +242,7 @@
 
     table.tlvorj-maplegend th {
         font-size: 120%;
+        font-weight: normal;
     }
 
     table.tlvorj-maplegend td img,
