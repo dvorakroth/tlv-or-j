@@ -233,30 +233,29 @@
         }
     }
 
-    .cols-container {
-        display: flex;
-        justify-content: center;
+    table.tlvorj-maplegend {
+        min-width: 360px;
+        border: 0;
+        margin-bottom: 20px;
+        text-align: center;
     }
 
-    ul.tlvorj-maplegend {
-        list-style-type: none;
-        padding: 0;
-        margin-top: 0;
-        width: 50%;
-        min-width: 180px;
-    }
-
-    ul.tlvorj-maplegend > li.subheading {
+    table.tlvorj-maplegend th {
         font-size: 120%;
     }
 
-    ul.tlvorj-maplegend > li > img,
-    ul.tlvorj-maplegend > li > canvas {
+    table.tlvorj-maplegend td img,
+    table.tlvorj-maplegend td canvas {
         vertical-align: middle;
 
         /* gee i sure hope this kludge doesn't look terrible on exactly half of the browser/os combinations: */
         position: relative;
         bottom: 2px;
+    }
+
+    .legend-centerer {
+        display: inline-block;
+        text-align: right;
     }
 
     /* because this is plain css and not sass/less, i now have to duplicate the dark mode code */
@@ -328,7 +327,7 @@
     }
 
     @media screen and (max-width: 400px) {
-           ul.tlvorj-maplegend {
+        table.tlvorj-maplegend {
             min-width: unset;
         }
     }
@@ -375,19 +374,26 @@
 
     <section id="all-answers-page" class="hidden">
         <h1>התשובות הסופיות</h1>
-        <div class="cols-container">
-            <ul class="tlvorj-maplegend">
-                <li class="subheading">את.ה ענית:</li>
-                <li><img src="/assets/marker_tlv.svg" alt="ריבוע תכלת עם מסגרת שחורה" width="22" height="22"> &mdash; תל אביב</li>
-                <li><img src="/assets/marker_jaffa.svg" alt="עיגול סגול עם מסגרת לבנה" width="22" height="22"> &mdash; יפו</li>
-            </ul>
-            <ul class="tlvorj-maplegend">
-                <li class="subheading">אחרות ואחרים ענו:</li>
-                <li><canvas id="legend-other-tlv" alt="עיגול תכלת מטושטש" width="22" height="22"></canvas> &mdash; תל אביב</li>
-                <li><canvas id="legend-other-jaf" alt="עיגול סגול מטושטש" width="22" height="22"></canvas> &mdash; יפו</li>
-            </ul>
-        </div>
-        
+        <table class="tlvorj-maplegend">
+            <tr>
+                <th>את.ה ענית:</th>
+                <th>אחרות ואחרים ענו:</th>
+            </tr>
+            <tr>
+                <td>
+                    <div class="legend-centerer">
+                        <img src="/assets/marker_tlv.svg" alt="ריבוע תכלת עם מסגרת שחורה" width="22" height="22"> &mdash; תל אביב<br>
+                        <img src="/assets/marker_jaffa.svg" alt="עיגול סגול עם מסגרת לבנה" width="22" height="22"> &mdash; יפו
+                    </div>
+                </td>
+                <td>
+                    <div class="legend-centerer">
+                        <canvas id="legend-other-tlv" alt="עיגול תכלת מטושטש" width="22" height="22"></canvas> &mdash; תל אביב<br>
+                        <canvas id="legend-other-jaf" alt="עיגול סגול מטושטש" width="22" height="22"></canvas> &mdash; יפו
+                    </div>
+                </td>
+            </tr>
+        </table>
         <button class="btn-pretty" id="btn-playagain">עוד הפעם!!</button>
     </section>
     
@@ -607,7 +613,7 @@
                 STATE.markers[i].remove();
             }
             STATE.markers = null;
-            
+
             HEAT_LAYER.remove();
             HEAT_LAYER.setUrl("");
             if (STATE.answer_markers) {
