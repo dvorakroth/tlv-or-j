@@ -50,6 +50,8 @@ city_poly = None
 preferred_maxx = 34.7654 # 34.7807
 preferred_maxy = 32.0582 # 32.0646
 
+SESSION_LENGTH_SEC = 6 * 60 * 60 # 6 hours?
+
 class IDb:
     def store_new_answers(self, points, answers):
         pass
@@ -109,7 +111,7 @@ class DbPostgres(IDb):
                         (session_id,)
                     )
                 
-                ttl = time.time() + 15*60
+                ttl = time.time() + SESSION_LENGTH_SEC
 
                 cursor.execute(
                     "INSERT INTO WebSession (session_id, ttl, points_json) VALUES (%s, %s, %s);",
@@ -172,7 +174,7 @@ class DbPostgres(IDb):
             if row is None:
                 raise KeyError("session not found")
 
-            new_ttl = time.time() + 15*60
+            new_ttl = time.time() + SESSION_LENGTH_SEC
             
             with conn.cursor() as cursor:
                 cursor.execute(
