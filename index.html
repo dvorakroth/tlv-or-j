@@ -918,20 +918,22 @@
         }
 
         function preload_image_impl(src, onload, onerror) {
-            const img = document.createElement('img');
+            const link = document.createElement('link');
             if (onload) {
-                img.addEventListener('load', onload);
+                link.addEventListener('load', onload);
             }
             if (onerror) {
-                img.addEventListener('error', onerror);
+                link.addEventListener('error', onerror);
             }
-            img.classList.add('preloaded');
-            img.width = 1;
-            img.height = 1;
-            img.src = src;
-            document.body.appendChild(img);
+            // link.classList.add('preloaded');
+            // img.width = 1;
+            // img.height = 1;
+            link.href = src;
+            link.as = "image";
+            link.rel = "preload";
+            document.head.appendChild(link);
 
-            return img;
+            return link;
         }
 
         function preload_map_image(xyz, mode_idx, onload) {
