@@ -192,6 +192,7 @@ class TlvOrJServer:
         self.db = DbPostgres(os.environ['DATABASE_URL'])
 
         self.cleanup_thread = threading.Thread(target=self.cleanup_loop)
+        self.cleanup_thread.daemon = True
         self.cleanup_thread.start()
     
     def cleanup_loop(self):
