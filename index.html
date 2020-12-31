@@ -532,7 +532,6 @@
                 crossOrigin: true
         }).addTo(MAP);
 
-        // const BOUNDARY_LAYER = L.polyline([], {color: "red"});
         const HEAT_LAYER = L.imageOverlay("", MAP_MAX_BOUNDS);
 
         const QUESTION_VIEW_ZOOM = 16;
@@ -608,9 +607,7 @@
                 STATE.markers[i].remove();
             }
             STATE.markers = null;
-
-            // BOUNDARY_LAYER.remove();
-            // BOUNDARY_LAYER.setLatLngs([]);
+            
             HEAT_LAYER.remove();
             HEAT_LAYER.setUrl("");
             if (STATE.answer_markers) {
@@ -729,59 +726,59 @@
         }
 
         
-        let ZOOMANIM_END_TIMEOUT = null;
+        // let ZOOMANIM_END_TIMEOUT = null;
         
-        function recenter_question() {
-            ZOOMANIM_END_TIMEOUT = null;
+        // function recenter_question() {
+        //     ZOOMANIM_END_TIMEOUT = null;
             
-            if (!STATE.is_animating 
-                && STATE.questions 
-                && STATE.questions.length 
-                && STATE.question_idx >= 0 
-                && STATE.question_idx < STATE.questions.length)
-            {
+        //     if (!STATE.is_animating 
+        //         && STATE.questions 
+        //         && STATE.questions.length 
+        //         && STATE.question_idx >= 0 
+        //         && STATE.question_idx < STATE.questions.length)
+        //     {
 
-                const point = STATE.questions[STATE.question_idx];
-                const bounds = MAP.getBounds();
+        //         const point = STATE.questions[STATE.question_idx];
+        //         const bounds = MAP.getBounds();
 
-                let needs_correction = false;
+        //         let needs_correction = false;
 
-                if (!bounds.contains(point)) {
-                    needs_correction = true;
-                } else {
-                    const bounds_size = Math.min(Math.abs(bounds.getEast() - bounds.getWest()), Math.abs(bounds.getNorth() - bounds.getSouth()));
+        //         if (!bounds.contains(point)) {
+        //             needs_correction = true;
+        //         } else {
+        //             const bounds_size = Math.min(Math.abs(bounds.getEast() - bounds.getWest()), Math.abs(bounds.getNorth() - bounds.getSouth()));
 
-                    const center = MAP.getCenter();
-                    const dx = center.lng - point[1];
-                    const dy = center.lat - point[0];
+        //             const center = MAP.getCenter();
+        //             const dx = center.lng - point[1];
+        //             const dy = center.lat - point[0];
 
-                    const dist = Math.sqrt(dx*dx + dy*dy);
+        //             const dist = Math.sqrt(dx*dx + dy*dy);
 
-                    if (dist > bounds_size * 0.3333) {
-                        needs_correction = true;
-                    }
-                }
+        //             if (dist > bounds_size * 0.3333) {
+        //                 needs_correction = true;
+        //             }
+        //         }
 
-                if (needs_correction) {
-                    MAP.flyTo(point, Math.max(13, MAP.getZoom()), {duration: 1.0});
-                }
-            }
-        }
+        //         if (needs_correction) {
+        //             MAP.flyTo(point, Math.max(13, MAP.getZoom()), {duration: 1.0});
+        //         }
+        //     }
+        // }
 
-        MAP.on("zoomanim", function() {
-            if (ZOOMANIM_END_TIMEOUT !== null) {
-                clearTimeout(ZOOMANIM_END_TIMEOUT);
-            }
+        // MAP.on("zoomanim", function() {
+        //     if (ZOOMANIM_END_TIMEOUT !== null) {
+        //         clearTimeout(ZOOMANIM_END_TIMEOUT);
+        //     }
 
-            if (!STATE.is_animating 
-                && STATE.questions 
-                && STATE.questions.length 
-                && STATE.question_idx >= 0 
-                && STATE.question_idx < STATE.questions.length)
-            {
-                ZOOMANIM_END_TIMEOUT = setTimeout(recenter_question, 800);
-            }
-        });
+        //     if (!STATE.is_animating 
+        //         && STATE.questions 
+        //         && STATE.questions.length 
+        //         && STATE.question_idx >= 0 
+        //         && STATE.question_idx < STATE.questions.length)
+        //     {
+        //         ZOOMANIM_END_TIMEOUT = setTimeout(recenter_question, 800);
+        //     }
+        // });
 
         function addAnswer(isJaffa) {
             if (STATE.is_animating) {
@@ -840,16 +837,11 @@
                     o, 100, 0.7, 1, 14
                 );
 
-                // const boundary = o.properties.boundary.map(([x, y]) => [y, x])
-
                 heatmap.toBlob(function(blob) {
                     STATE.answer_markers = URL.createObjectURL(blob);
                     HEAT_LAYER.setUrl(STATE.answer_markers);
                     HEAT_LAYER.setOpacity(0.7);
                     HEAT_LAYER.addTo(MAP);
-
-                    // BOUNDARY_LAYER.setLatLngs(boundary);
-                    // BOUNDARY_LAYER.addTo(MAP);
 
                     // TODO: maybe add a timeout? or somehow hook into HEAT_LAYER.getElement().onload?
                     document.getElementById('results-loading-page').classList.add('hidden');
