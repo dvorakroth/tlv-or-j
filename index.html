@@ -202,6 +202,8 @@
         min-width: 200px;
         min-height: 120px;
 
+        padding-top: 20px;
+
         font-size: 150%;
     }
 
@@ -213,9 +215,10 @@
     .loading-indicator {
         width: 80px;
         height: 80px;
-        border: 5px solid #333;
-        border-radius: 100%;
-        border-style: dashed;
+        background-color: transparent;
+        background-image: url('/assets/loading.svg');
+        background-size: contain;
+        background-repeat: no-repeat;
         
         animation-duration: 5s;
         animation-name: rotate;
@@ -278,7 +281,7 @@
     }
 
     body.force-dark .loading-indicator {
-        border-color: #fff;
+        background-image: url('/assets/loading_darkmode.svg');
     }
 
     @media (prefers-color-scheme: dark) {
@@ -296,7 +299,7 @@
         }
 
         body:not(.force-light) .loading-indicator {
-            border-color: #fff;
+            background-image: url('/assets/loading_darkmode.svg');
         }
     }
 
@@ -502,6 +505,8 @@
 
         const ASSETS_TO_PRELOAD = [
             // conveniently in order of appearance for typical user(tm)
+            "/assets/loading.svg",
+            "/assets/loading_darkmode.svg",
             "/assets/switch_light.svg",
             "/assets/switch_dark.svg",
             "/assets/marker_q.svg",
