@@ -564,7 +564,7 @@
         const MAP_MAX_BOUNDS = L.latLngBounds(L.latLng(32.017357, 34.724041), L.latLng(32.159226, 34.867250));
         const MAP_FINAL_VIEW_BOUNDS = L.latLngBounds(
             // southwest: just outside tlv/by border
-            L.latLng(32.0290,34.7412),
+            L.latLng(32.0290,34.7512), //L.latLng(32.0290,34.7412),
             // northeast: beggin/hashmonaim
             L.latLng(32.0693,34.7877)
         )
@@ -910,6 +910,7 @@
             clear_map_images_cache();
 
             MAP.setMinZoom(MIN_ZOOM_ALL_ANSWERS);
+            MAP.setMaxBounds(MAP_MAX_BOUNDS);
             if (GLOB_is_reduced_motion) {
                 setTimeout(function() {
                     MAP.fitBounds(MAP_FINAL_VIEW_BOUNDS, {animate: false, duration: 0});
@@ -942,7 +943,6 @@
                     resize_map();
 
                     MAP.dragging.enable();
-                    MAP.setMaxBounds(MAP_MAX_BOUNDS);
                     MAP.options.touchZoom = true;
                     MAP.options.scrollWheelZoom = true;
                 });
@@ -1267,6 +1267,14 @@
             resize_map();
         });
 
+        function recenter_question(resize_amount) {
+            if (!STATE.is_animating && STATE.questions && STATE.questions.length 
+                && 0 <= STATE.question_idx && STATE.question_idx < STATE.questions.length)
+            {
+                MAP.setView(STATE.questions[STATE.question_idx], MAP.getZoom(), {animate: false, duration: 0});
+            }
+        }
+
         function resize_map() {
             setTimeout(function() {
                 const ui = document.getElementById("main-ui");
@@ -1279,6 +1287,8 @@
                 }
                 
                 MAP.invalidateSize(true);
+
+                setTimeout(recenter_question, 0); // haha nesting these isn't cursed at all hahahahahahahslhsasldfjoweijfz;lkjfasdl;kfjasd;ofwije
             }, 0);
         }
 
