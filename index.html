@@ -155,14 +155,14 @@
         position:absolute;
 
         animation-duration: 1s;
-        animation-name: fade;
+        animation-name: fade-and-elevate;
         animation-iteration-count: 1;
         animation-timing-function:  ease-out;
 
         opacity: 0%;
     }
 
-    @keyframes fade {
+    @keyframes fade-and-elevate {
         from {
             top: 0;
             opacity: 100%;
@@ -172,6 +172,25 @@
             top: -70px;
             opacity: 0%;
             display:none;
+        }
+    }
+
+    @media screen and (prefers-reduced-motion: reduce) {
+        .fading-reward {
+            animation-name: fade;
+        }
+
+        @keyframes fade {
+            from {
+                top: 0;
+                opacity: 100%;
+            }
+
+            to {
+                top: 0px;
+                opacity: 0%;
+                display:none;
+            }
         }
     }
 
@@ -190,6 +209,12 @@
 
         to {
             transform: scale(0.6);
+        }
+    }
+
+    @media screen and (prefers-reduced-motion: reduce) {
+        .pulsating {
+            animation: none !important; /* yeah i think this one's expendable */
         }
     }
 
@@ -224,6 +249,12 @@
         animation-name: rotate;
         animation-iteration-count: infinite;
         animation-timing-function:  linear;
+    }
+
+    @media screen and (prefers-reduced-motion: reduce) {
+        .loading-indicator {
+            animation: none !important;
+        }
     }
 
     @keyframes rotate {
@@ -444,11 +475,15 @@
         let GLOB_is_dark_mode = false;
         let GLOB_is_dark_forced = false; // are we forcing light/dark mode currently?
 
+        let GLOB_is_reduced_motion = false;
+
         if (window.matchMedia) {
             const matchDarkMode = window.matchMedia('(prefers-color-scheme: dark)');
+            const matchReduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
             // when we just initialize, set the dark mode flag to match browser settings
             GLOB_is_dark_mode = !!matchDarkMode.matches;
+            GLOB_is_reduced_motion = !!matchReduceMotion.matches;
 
             matchDarkMode.addEventListener('change', event => {
                 // but when the setting is changed on the fly, only update the flag
@@ -459,6 +494,11 @@
 
                 GLOB_is_dark_mode = !!event.matches;
                 onDarkModeSettingChanged();
+            });
+
+            matchReduceMotion.addEventListener('change', event => {
+                // (no complex logic here, just set the value, cause i don't offer any way to change it in the ui)
+                GLOB_is_reduced_motion = !!event.matches;
             })
         }
 
@@ -730,33 +770,43 @@
             const q = STATE.questions[STATE.question_idx];
             STATE.markers[STATE.question_idx] = L.marker(q, {icon:MARKER_Q}).addTo(MAP);
 
-            let ANIM_LEN_MS = 1500;
+            let ANIM_LEN_MS = 1500; // this variable is used for the setTimeout, even when prefers-reduced-motion is on
 
-            if (STATE.question_idx > 0) {
-                // i checked manually, and the distance between the opposite (sw/ne) corners of tlv is about 0.1303 degrees
-                // and i want that distance to take exactly 3000 ms to traverse
-                const FLY_SPEED = 0.1303 / 3000; // deg/ms
+            if (GLOB_is_reduced_motion) {
+                ANIM_LEN_MS = STATE.question_idx === 0 ? 0 : 1000;
 
-                const [prev_y, prev_x] = STATE.questions[STATE.question_idx - 1];
-                const [next_y, next_x] = q;
+                setTimeout(function() {
+                    MAP.setView(q, QUESTION_VIEW_ZOOM, {animate: false, duration: 0});
+                }, ANIM_LEN_MS);
+            } else {
+                if (STATE.question_idx > 0) {
+                    // i checked manually, and the distance between the opposite (sw/ne) corners of tlv is about 0.1303 degrees
+                    // and i want that distance to take exactly 3000 ms to traverse
+                    const FLY_SPEED = 0.1303 / 3000; // deg/ms
 
-                const dy = next_y - prev_y;
-                const dx = next_x - prev_x;
+                    const [prev_y, prev_x] = STATE.questions[STATE.question_idx - 1];
+                    const [next_y, next_x] = q;
 
-                const distance_deg = Math.sqrt(dx*dx + dy*dy);
+                    const dy = next_y - prev_y;
+                    const dx = next_x - prev_x;
 
-                ANIM_LEN_MS = Math.max(
-                    1000, // never take less than a second
-                    distance_deg / FLY_SPEED // deg/(deg/ms) = deg*(ms/deg) ms*(deg/deg) = ms
-                );
+                    const distance_deg = Math.sqrt(dx*dx + dy*dy);
+
+                    ANIM_LEN_MS = Math.max(
+                        1000, // never take less than a second
+                        distance_deg / FLY_SPEED // deg/(deg/ms) = deg*(ms/deg) ms*(deg/deg) = ms
+                    );
+                }
+
+                MAP.stop();
+                MAP.flyTo(q, QUESTION_VIEW_ZOOM, {duration: ANIM_LEN_MS / 1000.0});
             }
+
             setTimeout(function() {
                 STATE.is_animating = false;
                 BTN_TLV.removeAttribute('disabled');
                 BTN_JAF.removeAttribute('disabled');
             }, ANIM_LEN_MS);
-            MAP.stop();
-            MAP.flyTo(q, QUESTION_VIEW_ZOOM, {duration: ANIM_LEN_MS / 1000.0});
         }
 
         
@@ -860,8 +910,14 @@
             clear_map_images_cache();
 
             MAP.setMinZoom(MIN_ZOOM_ALL_ANSWERS);
-            MAP.stop();
-            MAP.flyToBounds(MAP_FINAL_VIEW_BOUNDS);
+            if (GLOB_is_reduced_motion) {
+                setTimeout(function() {
+                    MAP.fitBounds(MAP_FINAL_VIEW_BOUNDS, {animate: false, duration: 0});
+                }, 1000);
+            } else {
+                MAP.stop();
+                MAP.flyToBounds(MAP_FINAL_VIEW_BOUNDS);
+            }
 
             const answers = STATE.answers.map((x) => x|0).join(',');
             
