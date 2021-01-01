@@ -297,6 +297,30 @@
         font-size: 180%;
     }
 
+    #main-ui > .credits {
+        position: absolute;
+        left: 4px;
+        bottom: 2px;
+
+        font-size: 80%;
+    }
+
+    #main-ui a:link,
+    #main-ui a:visited {
+        color: #777;
+    }
+
+    #main-ui a:active {
+        color: #bbb;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        #main-ui a:hover {
+            color: #aaa;
+            text-decoration: dotted underline;
+        }
+    }
+
     /* because this is plain css and not sass/less, i now have to duplicate the dark mode code */
     body.force-dark #main-ui {
         background-color: #000;
@@ -313,6 +337,21 @@
 
     body.force-dark .loading-indicator {
         background-image: url('/assets/loading_darkmode.svg');
+    }
+
+    body.force-dark #main-ui a:link,
+    body.force-dark #main-ui a:visited {
+        color: #bbb;
+    }
+
+    body.force-dark #main-ui a:active {
+        color: #ddd;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        body.force-dark #main-ui a:hover {
+            color: #ddd;
+        }
     }
 
     @media (prefers-color-scheme: dark) {
@@ -332,6 +371,21 @@
         body:not(.force-light) .loading-indicator {
             background-image: url('/assets/loading_darkmode.svg');
         }
+
+        body:not(.force-light) #main-ui a:link,
+        body:not(.force-light) #main-ui a:visited {
+            color: #bbb;
+        }
+
+        body:not(.force-light) #main-ui a:active {
+            color: #ddd;
+        }
+    }
+
+    @media (prefers-color-scheme: dark) and (hover: hover) and (pointer: fine) {
+        body:not(.force-light) #main-ui a:hover {
+            color: #ddd;
+        }
     }
 
     @media screen and (max-width: 760px) {
@@ -350,7 +404,7 @@
             border-bottom: none;
 
             box-sizing: border-box;
-            padding: 24px 20px; /* down from padding: 40px 20px; */
+            padding: 24px 20px 30px 20px; /* down from padding: 40px 20px; */
 
             min-height: 240px;
         }
@@ -441,6 +495,9 @@
         <button class="btn-pretty btn-blue" id="btn-playagain">עוד הפעם!!</button>
     </section>
     
+    <div class="credits">
+        יוצר באהבה רבה על-ידי <a href="https://ish.works/" target="_blank">איש.וורקס</a>.
+    </div>
 </div>
   
   <script>
