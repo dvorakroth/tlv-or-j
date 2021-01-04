@@ -201,7 +201,7 @@ class TlvOrJServer:
             self.db.clean_stale_sessions()
     
     @cherrypy.expose
-    def index(self):
+    def index(self, **params):
         return open('index.html')
 
     @cherrypy.expose
