@@ -81,7 +81,7 @@ class DbPostgres(IDb):
 
         t = time.time()
 
-        with psycopg2.connect(self.db_url, sslmode='require') as conn:
+        with psycopg2.connect(self.db_url, sslmode='prefer') as conn:
             with conn.cursor() as cursor:
                 execute_batch(
                     cursor,
@@ -90,7 +90,7 @@ class DbPostgres(IDb):
                 )
 
     def get_all_answers(self):
-        with psycopg2.connect(self.db_url, sslmode='require') as conn:
+        with psycopg2.connect(self.db_url, sslmode='prefer') as conn:
             with conn.cursor() as cursor:
                 cursor.execute("SELECT point_json, answer_val FROM Answer ORDER BY answer_time ASC;")
 
@@ -100,7 +100,7 @@ class DbPostgres(IDb):
                 ]
 
     def new_session(self, points):
-        with psycopg2.connect(self.db_url, sslmode='require') as conn:
+        with psycopg2.connect(self.db_url, sslmode='prefer') as conn:
             with conn.cursor() as cursor:
                 # generate a unique random session id lol
                 session_id = None
@@ -125,7 +125,7 @@ class DbPostgres(IDb):
                 }
 
     def get_and_delete_session(self, session_id):
-        with psycopg2.connect(self.db_url, sslmode='require') as conn:
+        with psycopg2.connect(self.db_url, sslmode='prefer') as conn:
             row = None
 
             with conn.cursor() as cursor:
@@ -149,7 +149,7 @@ class DbPostgres(IDb):
 
 
     def clean_stale_sessions(self):
-        with psycopg2.connect(self.db_url, sslmode='require') as conn:
+        with psycopg2.connect(self.db_url, sslmode='prefer') as conn:
             with conn.cursor() as cursor:
                 cursor.execute(
                     "DELETE FROM WebSession WHERE ttl < %s;",
@@ -160,7 +160,7 @@ class DbPostgres(IDb):
         # q: is this a glaring security hole or a useful ui usability feature?
         # a: why not both?
 
-        with psycopg2.connect(self.db_url, sslmode='require') as conn:
+        with psycopg2.connect(self.db_url, sslmode='prefer') as conn:
             row = None
 
             with conn.cursor() as cursor:
