@@ -1,6 +1,0 @@
-cherrypy
-shapely
-psycopg2
-#sklearn
-#numpy
-#pillow
