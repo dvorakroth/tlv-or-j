@@ -273,6 +273,11 @@ config = {
         'tools.staticfile.root': os.path.dirname(os.path.abspath(__file__)),
         'tools.staticfile.on': True,
         'tools.staticfile.filename': 'assets/icons/favicon.ico'
+    },
+    '/privacy.html': {
+        'tools.staticfile.root': os.path.dirname(os.path.abspath(__file__)),
+        'tools.staticfile.on': True,
+        'tools.staticfile.filename': 'privacy.html'
     }
 }
 
