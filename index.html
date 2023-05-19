@@ -19,7 +19,6 @@
     <link rel="manifest" href="/assets/icons/manifest.json">
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-TileImage" content="/assets/icons/ms-icon-144x144.png">
-    <meta name="theme-color" content="#ffffff">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
   <style>
@@ -29,6 +28,8 @@
     }
     body, .btn-pretty {
         font-family: 'Heebo', sans-serif;
+        background-color: #fff;
+        color: #000;
     }
     .preloaded {
         position: absolute;
@@ -331,6 +332,7 @@
     }
 
     /* because this is plain css and not sass/less, i now have to duplicate the dark mode code */
+    body.force-dark,
     body.force-dark #main-ui {
         background-color: #000;
         color: #fff;
@@ -364,6 +366,7 @@
     }
 
     @media (prefers-color-scheme: dark) {
+        body:not(.force-light),
         body:not(.force-light) #main-ui {
             background-color: #000;
             color: #fff;
@@ -397,7 +400,7 @@
         }
     }
 
-    @media screen and (max-width: 760px) {
+    @media screen and (max-width: 760px), (display-mode: standalone) {
         #main-ui {
             display: flex;
             justify-content: center;
@@ -425,6 +428,19 @@
         #map { 
             bottom: 240px;
             top: 0;
+        }
+    }
+
+    @media (display-mode: standalone) {
+        /* standalone webapps on ios have the little white line at the bottom;
+           the additional padding makes sure the credit and privacy policy link aren't under it */
+        #main-ui {
+            padding-bottom: 43px;
+        }
+
+        #main-ui > .credits,
+        #main-ui > .privacy {
+            bottom: 13px;
         }
     }
 

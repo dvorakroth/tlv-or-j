@@ -1,5 +1,6 @@
 {
  "name": "תל אביב או יפו?",
+ "display": "standalone",
  "icons": [
   {
    "src": "\/assets\/icons\/android-icon-36x36.png",
