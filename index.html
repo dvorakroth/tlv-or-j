@@ -1012,11 +1012,10 @@
             fetch(`/answer_session?session_id=${STATE.session_id}&answers=${answers}&get_all_answers=1`).then(function(response) {
                 return response.json();
             }).then(function(o) {
-                
-                const heatmap = generate_heatmap(
+                return generate_heatmap(
                     o, 100, 0.7, 1, 14
                 );
-
+            }).then(function(heatmap) {
                 heatmap.toBlob(function(blob) {
                     STATE.answer_markers = URL.createObjectURL(blob);
                     HEAT_LAYER.setUrl(STATE.answer_markers);
@@ -1283,10 +1282,7 @@
             const tlv_color_trans0 =   TLV_COLOR.replace(/([,]\s*)1[)]/, (m, p) => (p + "0)"));
             const jaf_color_trans0 = JAFFA_COLOR.replace(/([,]\s*)1[)]/, (m, p) => (p + "0)"));
 
-
-            for (let i = 0; i < all_answers_xyj.length; i++) {
-                const [lng, lat, is_jaffa] = all_answers_xyj[i];
-
+            const generateOneBlob = ([lng, lat, is_jaffa]) => {
                 const x = Math.round(TILE_SIZE * long2tileFrac(lng, zoom_level) - minx);
                 const y = Math.round(TILE_SIZE * lat2tileFrac(lat, zoom_level) - miny);
 
@@ -1302,9 +1298,34 @@
                 ctx.beginPath();
                 ctx.ellipse(x, y, point_radius, point_radius, 0, 0, 2 * Math.PI);
                 ctx.fill();
-            }
+            };
 
-            return canvas;
+            // this used to just all be generated in one go, but when the
+            // number of answers in the db gets to several hundreds (oh, those
+            // were the days!!!), this makes some devices freeze because this
+            // hogs the entire singular js thread;
+
+            // so instead, this is now done in small chunks, via setTimeout,
+            // and the function returns a promise that's resolved after
+            // everything's done
+            return new Promise((resolve) => {
+                let i = 0;
+                const chunkSize = 10;
+
+                const generateMoreBlobs = () => {
+                    for (let j = 0; j < chunkSize && i < all_answers_xyj.length; j++, i++) {
+                        generateOneBlob(all_answers_xyj[i]);
+                    }
+
+                    if (i < all_answers_xyj.length) {
+                        setTimeout(generateMoreBlobs, 10);
+                    } else {
+                        resolve(canvas);
+                    }
+                };
+
+                setTimeout(generateMoreBlobs, 10);
+            });
         }
 
         function init_heatmap_legend(point_radius, blur_factor, max_opacity) {
