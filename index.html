@@ -1242,6 +1242,8 @@
             });
         }
 
+        const HEATMAP_CANVAS = document.createElement("canvas");
+
         function generate_heatmap(
             all_answers_xyj, point_radius, blur_factor, max_opacity, zoom_level
         ) {
@@ -1264,13 +1266,12 @@
                 ]
             ];
 
-            const canvas = document.createElement("canvas");
+            HEATMAP_CANVAS.width = maxx - minx;
+            HEATMAP_CANVAS.height = maxy - miny;
+            HEATMAP_CANVAS.style.background = "transparent";
 
-            canvas.width = maxx - minx;
-            canvas.height = maxy - miny;
-            canvas.style.background = "transparent";
-
-            const ctx = canvas.getContext("2d");
+            const ctx = HEATMAP_CANVAS.getContext("2d");
+            ctx.clearRect(0, 0, HEATMAP_CANVAS.width, HEATMAP_CANVAS.height);
 
             ctx.strokeStyle = "none";
 
@@ -1320,7 +1321,7 @@
                     if (i < all_answers_xyj.length) {
                         setTimeout(generateMoreBlobs, 10);
                     } else {
-                        resolve(canvas);
+                        resolve(HEATMAP_CANVAS);
                     }
                 };
 
